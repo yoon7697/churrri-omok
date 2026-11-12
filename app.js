@@ -4,7 +4,7 @@ const boardEl=$('board');
 let board=emptyBoard();let player=1;let moves=[];let finished=false;
 const modal=$('infoDialog');
 const modalText={
-  rules:{title:'오목왕 규칙',html:'<ul><li>15×15 오목판에서 흑돌이 먼저 시작해요.</li><li>흑과 백 모두 두 방향에 동시에 열린 삼을 만드는 <b>3·3은 금지</b>예요.</li><li>가로·세로·대각선으로 돌을 연속 5개 이상 연결하면 승리해요.</li><li>둘 수 있는 곳이 남지 않으면 무승부예요.</li><li>3·3 예외 판정은 개선 중이므로 공식 대회 적용 전 검증이 필요해요.</li></ul>'},
+  rules:{title:'오목왕 규칙',html:'<ul><li>15×15 오목판에서 흑돌이 먼저 시작해요.</li><li>흑과 백 모두 두 방향에 동시에 열린 삼을 만드는 <b>3·3은 금지</b>예요.</li><li>가로·세로·대각선으로 돌을 연속 5개 이상 연결하면 승리해요.</li><li>둘 수 있는 곳이 남지 않으면 무승부예요.</li><li>3·3 판정 테스트를 보강했지만, 공식 대회 적용 전 다양한 실전 상황 검증이 필요해요.</li></ul>'},
   help:{title:'사용 방법',html:'<ol><li><b>1:1 대결 → 바로 대결하기</b>를 눌러요.</li><li>친구 두 명이 한 기기에서 번갈아 교차점을 눌러요.</li><li>마지막 수는 빨간 점, 현재 차례는 오른쪽에 표시돼요.</li><li>잘못 둔 수는 <b>한 수 무르기</b>, 새로 시작하려면 <b>새 게임</b>을 눌러요.</li></ol><p>온라인 방 만들기, 컴퓨터 연습, 방 코드 기능은 다음 버전에서 제공할 예정이에요.</p>'}
 };
 function showDialog(title,html){$('dialogTitle').textContent=title;$('dialogContent').innerHTML=html;modal.showModal();}
