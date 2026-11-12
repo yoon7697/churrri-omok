@@ -81,7 +81,8 @@ for(const [width,height] of [[390,844],[768,1024],[1024,768],[1366,768],[844,390
     await expect(page.locator('#practiceForm button')).toBeVisible();
     await page.screenshot({path:`test-results/setup-${width}x${height}.png`,fullPage:true});
     await page.locator('#practiceForm button').click();
-    const board=await page.locator('.board-wrap').boundingBox();expect(board.width).toBeGreaterThan(100);expect(Math.abs(board.width-board.height)).toBeLessThan(2);
+    const board=await page.locator('.board-wrap').boundingBox();expect(board.width).toBeGreaterThan(100);
+    if(width<500)expect((await page.locator('.status-panel').boundingBox()).width).toBeGreaterThan(width*.8);expect(Math.abs(board.width-board.height)).toBeLessThan(2);
     expect(board.x).toBeGreaterThanOrEqual(0);expect(board.x+board.width).toBeLessThanOrEqual(width);expect(board.y+board.height).toBeLessThanOrEqual(height);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.mouse.wheel(0,500);expect(await page.evaluate(()=>scrollY)).toBe(0);

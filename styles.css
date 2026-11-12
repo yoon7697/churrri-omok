@@ -70,3 +70,8 @@ body.setup-mode .hero,body.setup-mode .features,body.setup-mode #siteFooter{disp
 @keyframes thinking-pulse{to{opacity:.35;transform:scale(.85)}}
 @media(prefers-reduced-motion:reduce){.thinking .stone{animation:none}}
 @media(max-width:600px){.practice-card{padding:20px 16px}.practice-options{grid-template-columns:1fr}.practice-section .section-head h2{font-size:22px}.practice-section .section-head .pill{padding:10px;white-space:nowrap}.practice-options span{padding-top:12px;padding-bottom:12px}.practice-options small{margin-top:3px}}
+/* Keep setup navigation and the compact phone status readable. */
+body.setup-mode #siteHeader{flex-wrap:wrap}
+body.setup-mode .brand{flex-shrink:0}
+body.setup-mode .top-actions .pill{white-space:nowrap}
+@media(max-width:500px){body.playing-mode .status-panel{grid-column:1/-1}}
