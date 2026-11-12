@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#fff8e8" />
+  <meta name="description" content="우리 반 오목왕 — 친구와 한 기기에서 즐기는 오목 게임. 흑백 모두 3·3 금지!" />
+  <title>우리 반 오목왕 | CHURRRI'S LAB</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar wrap">
+    <a class="brand" href="#home" aria-label="우리 반 오목왕 홈으로">
+      <span class="brand-icon" aria-hidden="true">⚫<span>⚪</span></span>
+      <span><strong>우리 반 오목왕</strong><small>친구들과 함께하는 온라인 오목</small></span>
+    </a>
+    <span class="credit">made by <a href="https://churrri-lab.vercel.app/" target="_blank" rel="noopener noreferrer">CHURRRI'S LAB</a></span>
+    <nav class="top-actions" aria-label="도움말"><button type="button" class="pill" data-dialog="rules">📖 규칙 보기</button><button type="button" class="pill" data-dialog="help">❔ 사용 방법</button></nav>
+  </header>
+
+  <main id="home">
+    <section class="hero wrap" id="landing" aria-labelledby="headline">
+      <div class="hero-copy"><p class="eyebrow">CLASSROOM OMOK</p><h1 id="headline">우리 반<br><em>오목왕<span class="crown">👑</span></em></h1><p class="intro">우리 반 친구들과 함께 즐기는 온라인 오목!<br>방을 만들고, 함께 입장해 대결해요.<br>지금은 한 기기에서 번갈아 두는 게임을 즐길 수 있어요.</p></div>
+      <div class="hero-visual"><img src="./assets/omok-hero.webp" alt="교실에서 친구 두 명이 오목판을 사이에 두고 즐겁게 대결하는 그림" /></div>
+    </section>
+
+    <section class="features wrap" aria-label="게임 방식 선택">
+      <article class="feature-card"><span class="feature-icon">🏫</span><h2>방 만들기</h2><p>학생들이 각자 기기로 접속하는 온라인 방 기능은 다음 버전에서 제공할 예정이에요.</p><button class="feature-button yellow" type="button" data-unavailable="온라인 방 만들기">방 만들기 <span>준비 중</span></button></article>
+      <article class="feature-card"><span class="feature-icon">🎮</span><h2>연습하기</h2><p>컴퓨터와 오목을 두는 AI 연습 모드! 난이도 선택 기능을 준비하고 있어요.</p><button class="feature-button" type="button" data-unavailable="컴퓨터 연습하기">연습 시작하기 <span>준비 중</span></button></article>
+      <article class="feature-card"><span class="feature-icon">🔵🔴</span><h2>1:1 대결</h2><p>친구와 같은 패드 또는 컴퓨터에서 흑과 백을 번갈아 두며 대결해요!</p><button class="feature-button primary" id="startLocal" type="button">바로 대결하기 <span>↗</span></button></article>
+      <article class="feature-card"><span class="feature-icon">🔑</span><h2>방 코드로 참가</h2><p>온라인 방 코드로 참여하는 기능은 다음 버전에서 열릴 예정이에요.</p><div class="join-row"><input id="joinCode" type="text" inputmode="numeric" maxlength="4" placeholder="방 코드 4자리" aria-label="방 코드 4자리" disabled /><button class="join-button" data-unavailable="방 코드 입장" type="button">입장</button></div></article>
+    </section>
+
+    <section class="game-section wrap hidden" id="gameSection" aria-labelledby="gameTitle">
+      <div class="section-head"><div><p class="eyebrow">LOCAL 2 PLAYER</p><h2 id="gameTitle">친구와 1:1 오목 대결</h2><p>한 기기를 번갈아 사용하세요. 흑돌이 먼저 시작해요.</p></div><button class="pill" id="backHome" type="button">← 메인으로</button></div>
+      <div class="game-layout">
+        <div class="board-panel"><div class="board-wrap"><div id="board" class="board" role="grid" aria-label="15행 15열 오목판"></div></div><div class="board-caption">교차점을 누르면 돌을 놓을 수 있어요. 마지막 수는 빨간 점으로 표시돼요.</div></div>
+        <aside class="game-sidebar">
+          <div class="status-panel" aria-live="polite"><p class="side-kicker">현재 게임</p><div class="turn-badge" id="turnBadge"><span class="stone black"></span><strong id="turnText">흑돌 차례</strong></div><p id="gameMessage" class="game-message">먼저 다섯 개를 연결하면 승리해요!</p><div class="stats"><div><span>착수 수</span><strong id="moveCount">0수</strong></div><div><span>승리 조건</span><strong>5목</strong></div></div></div>
+          <div class="info-panel"><h3>게임 규칙</h3><ul><li>흑과 백 모두 <b>3·3 금지</b></li><li>가로·세로·대각선 5개 이상 연결하면 승리</li><li>돌은 빈 교차점에만 놓을 수 있어요</li><li>이 버전은 한 기기에서 번갈아 대국해요</li></ul></div>
+          <div class="game-buttons"><button id="undoButton" class="pill" type="button">↶ 한 수 무르기</button><button id="resetButton" class="pill button-strong" type="button">⟳ 새 게임</button></div>
+          <p class="technical-note">3·3 판정은 열린 삼을 만드는 연속·띄엄 패턴을 검사합니다. 특수 금수 예외는 계속 검증 중입니다. 공식 대회에 사용하기 전 추가 검증이 필요합니다.</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <footer class="footer wrap"><span>© 2026 CHURRRI'S LAB · 우리 반 오목왕 v0.1</span><a href="#home">맨 위로 ↑</a></footer>
+  <dialog id="infoDialog" aria-labelledby="dialogTitle"><div class="dialog-head"><h2 id="dialogTitle">안내</h2><button id="closeDialog" type="button" aria-label="닫기">✕</button></div><div id="dialogContent"></div><button class="dialog-confirm" id="okDialog" type="button">확인</button></dialog>
+</body>
+</html>

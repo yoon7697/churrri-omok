@@ -1,0 +1,12 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {emptyBoard,tryMove,isDoubleThree, isFive} from '../rules.js';
+test('empty board accepts the first black move',()=>{let b=emptyBoard();assert.equal(tryMove(b,7,7,1).ok,true);assert.equal(b[7][7],1)});
+test('occupied intersections cannot be overwritten',()=>{let b=emptyBoard();tryMove(b,7,7,1);assert.equal(tryMove(b,7,7,2).ok,false);assert.equal(b[7][7],1)});
+test('horizontal five wins',()=>{let b=emptyBoard();for(let c=3;c<7;c++)b[7][c]=1;assert.equal(tryMove(b,7,7,1).win,true)});
+test('vertical five wins',()=>{let b=emptyBoard();for(let r=3;r<7;r++)b[r][7]=2;assert.equal(tryMove(b,7,7,2).win,true)});
+test('diagonal five wins',()=>{let b=emptyBoard();for(let i=0;i<4;i++)b[4+i][4+i]=1;assert.equal(tryMove(b,8,8,1).win,true)});
+test('black cross double three is forbidden and leaves board unchanged',()=>{let b=emptyBoard();for(let [r,c] of [[7,6],[7,8],[6,7],[8,7]])b[r][c]=1;assert.equal(isDoubleThree(b,7,7,1),true);assert.equal(tryMove(b,7,7,1).ok,false);assert.equal(b[7][7],0)});
+test('white cross double three is also forbidden',()=>{let b=emptyBoard();for(let [r,c] of [[7,6],[7,8],[6,7],[8,7]])b[r][c]=2;assert.equal(tryMove(b,7,7,2).ok,false)});
+test('single open three is allowed',()=>{let b=emptyBoard();b[7][6]=1;b[7][8]=1;assert.equal(tryMove(b,7,7,1).ok,true)});
+test('broken threes in two axes are forbidden',()=>{let b=emptyBoard();for(let [r,c] of [[7,6],[7,9],[6,7],[9,7]])b[r][c]=1;assert.equal(isDoubleThree(b,7,7,1),true)});
+test('edge-bound three is not considered open',()=>{let b=emptyBoard();for(let [r,c] of [[0,1],[0,2],[1,0],[2,0]])b[r][c]=1;assert.equal(isDoubleThree(b,0,0,1),false)});
