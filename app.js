@@ -7,6 +7,13 @@ const eventModal=$('gameEventDialog');
 let lastFocusedElement=null;
 let mode='local', human=1, difficulty='normal', thinking=false;
 let worker=null, thinkingTimer=null, watchdog=null, computerRequest=0;
+let returnToLobby=null;
+export function openPracticeFromLobby(onReturn){
+  returnToLobby=onReturn;
+  $('practiceHome').textContent='← 대기실로';$('backHome').textContent='← 대기실로';
+  viewPractice();
+}
+export function showMainMenu(){returnToLobby=null;viewHome();}
 const difficultyNames={easy:'쉬움',normal:'보통',hard:'어려움'};
 function cancelComputer(){
   computerRequest++;
@@ -75,6 +82,9 @@ function viewHome(){
   cancelComputer();
   $('practiceSection').classList.add('hidden');
   if(eventModal.open)eventModal.close();
+  $('practiceHome').textContent='← 메인으로';$('backHome').textContent='← 메인으로';
+  if(returnToLobby){const callback=returnToLobby;returnToLobby=null;callback();return;}
+  document.dispatchEvent(new Event('omok:home'));
   document.body.classList.remove('playing-mode','setup-mode');
   document.body.classList.add('home-mode');
   $('gameSection').classList.add('hidden');
