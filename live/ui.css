@@ -1,0 +1,29 @@
+.live-entry-card{max-width:480px;margin:0 auto}.live-entry-card>.lobby-primary{margin-top:24px}
+.live-layout{display:grid;grid-template-columns:minmax(240px,340px) minmax(0,1fr);gap:20px;align-items:start}
+.live-room-panel .participant-grid{grid-template-columns:1fr;margin:18px 0}
+.live-room-panel>.room-code{font-size:40px;margin:8px 0 18px}
+.live-room-panel>.lobby-secondary{width:100%}.live-teacher-actions{display:grid;gap:14px;margin-top:20px}
+.live-board-panel{display:flex;flex-direction:column;align-items:center;padding:18px}
+.live-board-panel .board-wrap{width:100%;max-width:600px;height:auto;flex:none}
+.live-game-status{display:flex;justify-content:space-between;align-items:center;gap:20px;width:100%;font-size:20px;margin:0 0 12px}
+#liveTimer{font-variant-numeric:tabular-nums;color:var(--blue);font-size:22px;font-weight:850}
+.live-result{margin-top:20px;padding:16px;background:#f0f5e6;border-radius:16px;line-height:1.8}
+.live-result h2{font-size:21px;margin:0}.live-result p{font-size:13px;margin:8px 0;color:#746b79}
+.live-waiting{text-align:center;padding:50px 24px;line-height:1.9}.live-waiting>span{font-size:45px}.live-waiting h2{font-size:23px}.live-waiting p{font-size:14px;color:#817987}
+#liveConnection{font-size:12px;color:#627a59;max-width:65%;text-align:right;line-height:1.6}
+#liveError{position:sticky;bottom:10px;z-index:5;box-shadow:0 4px 16px #0001}
+@media(max-width:750px){.live-layout{grid-template-columns:1fr}.live-board-panel{padding:10px}.live-room-panel{padding:20px}.live-game-status{font-size:18px}.live-room-panel>.room-code{font-size:32px;margin:4px 0 12px}.live-room-panel .participant-grid{grid-template-columns:1fr 1fr}.live-room-panel .lobby-text-button{font-size:11px;padding:6px 2px}}
+body.live-playing{height:100dvh;overflow:hidden;overscroll-behavior:none}
+body.live-playing #siteHeader,body.live-playing .preview-banner{display:none!important}
+body.live-playing #onlineSection{height:100dvh;display:flex;flex-direction:column;padding-top:6px;padding-bottom:8px}
+body.live-playing .online-topline{margin-top:0;flex:none}
+body.live-playing .lobby-heading{margin:2px 0 8px;flex:none}
+body.live-playing .lobby-heading .eyebrow{display:none}
+body.live-playing .lobby-heading h1{font-size:20px;margin:0 0 3px}
+body.live-playing .lobby-heading>p:last-child{font-size:12px}
+body.live-playing .live-layout{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) 260px;gap:12px}
+body.live-playing .live-board-panel{grid-column:1;grid-row:1;min-height:0;justify-content:center;overflow:hidden}
+body.live-playing .live-room-panel{grid-column:2;grid-row:1;max-height:100%;overflow:auto;min-height:0}
+body.live-playing .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 225px));max-width:none}
+body.live-playing #liveError:empty{display:none}
+@media(max-width:750px){body.live-playing .live-layout{display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain}body.live-playing .live-board-panel{order:-1;flex:none;padding:6px;width:100%}body.live-playing .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 290px))}body.live-playing .live-room-panel{padding:10px;flex:1;max-height:none;overflow:auto}body.live-playing .live-room-panel>.side-kicker,body.live-playing .live-room-panel>.room-code,body.live-playing .live-room-panel>.lobby-secondary,body.live-playing .live-room-panel>.field-hint{display:none}body.live-playing .live-room-panel>p{font-size:12px;margin:2px}body.live-playing .live-board-panel .field-hint,body.live-playing .board-caption{display:none}body.live-playing .live-game-status{font-size:16px;margin-bottom:7px}}

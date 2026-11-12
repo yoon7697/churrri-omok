@@ -5,9 +5,17 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "test:ui": "playwright test"
+    "test:ui": "playwright test",
+    "build:server": "esbuild server/src/index.js --bundle --format=esm --platform=neutral --external:cloudflare:workers --outfile=server/dist/worker.mjs",
+    "dev:server": "wrangler dev --config server/wrangler.jsonc --ip 127.0.0.1 --port 8787 --var ALLOWED_ORIGINS:http://127.0.0.1:8080",
+    "test:server": "npm run build:server && node --test tests/server/*.test.js",
+    "deploy:server": "wrangler deploy --config server/wrangler.jsonc",
+    "configure:online": "node scripts/configure-online.mjs"
   },
   "devDependencies": {
-    "@playwright/test": "^1.65.0"
+    "@playwright/test": "^1.65.0",
+    "esbuild": "^0.28.2",
+    "miniflare": "^4.20260730.0",
+    "wrangler": "^4.160.1"
   }
 }
