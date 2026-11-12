@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="./styles.css" />
   <script type="module" src="./app.js"></script>
 </head>
-<body>
-  <header class="topbar wrap">
+<body class="home-mode">
+  <header class="topbar wrap" id="siteHeader">
     <a class="brand" href="#home" aria-label="우리 반 오목왕 홈으로">
       <span class="brand-icon" aria-hidden="true">⚫<span>⚪</span></span>
       <span><strong>우리 반 오목왕</strong><small>친구들과 함께하는 온라인 오목</small></span>
@@ -32,7 +32,7 @@
       <article class="feature-card"><span class="feature-icon">🔑</span><h2>방 코드로 참가</h2><p>온라인 방 코드로 참여하는 기능은 다음 버전에서 열릴 예정이에요.</p><div class="join-row"><input id="joinCode" type="text" inputmode="numeric" maxlength="4" placeholder="방 코드 4자리" aria-label="방 코드 4자리" disabled /><button class="join-button" data-unavailable="방 코드 입장" type="button">입장</button></div></article>
     </section>
 
-    <section class="game-section wrap hidden" id="gameSection" aria-labelledby="gameTitle">
+    <section class="game-section wrap hidden" id="gameSection" aria-labelledby="gameTitle" tabindex="-1">
       <div class="section-head"><div><p class="eyebrow">LOCAL 2 PLAYER</p><h2 id="gameTitle">친구와 1:1 오목 대결</h2><p>한 기기를 번갈아 사용하세요. 흑돌이 먼저 시작해요.</p></div><button class="pill" id="backHome" type="button">← 메인으로</button></div>
       <div class="game-layout">
         <div class="board-panel"><div class="board-wrap"><div id="board" class="board" role="grid" aria-label="15행 15열 오목판"></div></div><div class="board-caption">교차점을 누르면 돌을 놓을 수 있어요. 마지막 수는 빨간 점으로 표시돼요.</div></div>
@@ -45,7 +45,13 @@
       </div>
     </section>
   </main>
-  <footer class="footer wrap"><span>© 2026 CHURRRI'S LAB · 우리 반 오목왕 v0.1</span><a href="#home">맨 위로 ↑</a></footer>
+  <footer class="footer wrap" id="siteFooter"><span>© 2026 CHURRRI'S LAB · 우리 반 오목왕 v0.2.1</span><a href="#home">맨 위로 ↑</a></footer>
   <dialog id="infoDialog" aria-labelledby="dialogTitle"><div class="dialog-head"><h2 id="dialogTitle">안내</h2><button id="closeDialog" type="button" aria-label="닫기">✕</button></div><div id="dialogContent"></div><button class="dialog-confirm" id="okDialog" type="button">확인</button></dialog>
+  <dialog id="gameEventDialog" class="game-event-dialog" aria-labelledby="gameEventTitle" aria-describedby="gameEventText">
+    <div class="event-dialog-symbol" id="gameEventSymbol" aria-hidden="true">⚠️</div>
+    <h2 id="gameEventTitle">안내</h2>
+    <p id="gameEventText"></p>
+    <div id="gameEventActions" class="event-dialog-actions"></div>
+  </dialog>
 </body>
 </html>
