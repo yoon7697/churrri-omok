@@ -1,1 +1,13 @@
-{"name":"churrri-omok-king","version":"0.2.0","private":true,"type":"module","scripts":{"test":"node --test"}}
+{
+  "name": "churrri-omok-king",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:ui": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0"
+  }
+}
