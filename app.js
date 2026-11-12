@@ -6,9 +6,10 @@ const modal=$('infoDialog');
 const eventModal=$('gameEventDialog');
 let lastFocusedElement=null;
 let mode='local', human=1, difficulty='normal', thinking=false;
-let worker=null, thinkingTimer=null, watchdog=null;
+let worker=null, thinkingTimer=null, watchdog=null, computerRequest=0;
 const difficultyNames={easy:'쉬움',normal:'보통',hard:'어려움'};
 function cancelComputer(){
+  computerRequest++;
   clearTimeout(thinkingTimer);clearTimeout(watchdog);
   worker?.terminate();worker=null;thinking=false;
 }
@@ -22,10 +23,13 @@ function updateMode(){
 }
 function scheduleComputer(){
   if(!isComputerTurn()||!document.body.classList.contains('playing-mode'))return;
+  const request=++computerRequest;
   thinking=true;renderBoard();status();
   // Brief visible feedback before computing. Worker is terminated on every navigation/reset/undo.
   thinkingTimer=setTimeout(()=>{
+    if(request!==computerRequest)return;
     const fallback=()=>{
+      if(request!==computerRequest)return;
       clearTimeout(watchdog);worker?.terminate();worker=null;
       // Worker unavailable: play one legal nearby stone without a blocking search.
       const points=[];
@@ -34,6 +38,7 @@ function scheduleComputer(){
       complete(points.find(m=>!isDoubleThree(board,m.r,m.c,player))||null);
     };
     const complete=point=>{
+      if(request!==computerRequest)return;
       clearTimeout(watchdog);worker?.terminate();worker=null;thinking=false;
       if(!isComputerTurn()||!document.body.classList.contains('playing-mode'))return;
       if(!point){finished=true;renderBoard();status('무승부! 컴퓨터가 둘 수 있는 자리가 없어요.');showGameEvent('draw','무승부예요!','컴퓨터가 규칙에 맞게 둘 수 있는 자리가 없어요.');return;}
