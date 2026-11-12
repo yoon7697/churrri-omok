@@ -76,7 +76,11 @@ test('worker failure uses a legal fallback and remains playable',async({page})=>
 
 for(const [width,height] of [[390,844],[768,1024],[1024,768],[1366,768],[844,390]]){
   test(`viewport ${width}x${height}: setup and board fit, game page does not scroll`,async({page})=>{
-    await page.setViewportSize({width,height});await practice(page);
+    await page.setViewportSize({width,height});await page.goto('/');await page.locator('#startPractice').click();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await expect(page.locator('#practiceForm button')).toBeVisible();
+    await page.screenshot({path:`test-results/setup-${width}x${height}.png`,fullPage:true});
+    await page.locator('#practiceForm button').click();
     const board=await page.locator('.board-wrap').boundingBox();expect(board.width).toBeGreaterThan(100);expect(Math.abs(board.width-board.height)).toBeLessThan(2);
     expect(board.x).toBeGreaterThanOrEqual(0);expect(board.x+board.width).toBeLessThanOrEqual(width);expect(board.y+board.height).toBeLessThanOrEqual(height);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -95,4 +99,24 @@ test('full local board shows draw popup and new game',async({page})=>{
   });
   await expect(page.locator('.piece')).toHaveCount(225);await expect(page.locator('#gameEventTitle')).toHaveText('무승부예요!');
   await page.locator('#gameEventActions').getByRole('button',{name:'새 게임'}).click();await expect(page.locator('.piece')).toHaveCount(0);
+});
+
+test('an already running worker is cancelled by undo and reset',async({page})=>{
+  await page.route('**/ai-worker.js',route=>route.fulfill({contentType:'text/javascript',body:'self.onmessage=()=>setTimeout(()=>self.postMessage({move:{r:6,c:6}}),1200);'}));
+  await practice(page,'hard');
+  let started=page.waitForEvent('worker');await point(page,7,7).click();await started;await page.locator('#undoButton').click();
+  await page.waitForTimeout(1600);await expect(page.locator('.piece')).toHaveCount(0);await expect(page.locator('#turnText')).toContainText('내 차례');
+  started=page.waitForEvent('worker');await point(page,7,7).click();await started;await page.locator('#resetButton').click();
+  await page.waitForTimeout(1600);await expect(page.locator('.piece')).toHaveCount(0);
+});
+
+test.describe('touch tablet',()=>{
+  test.use({hasTouch:true,viewport:{width:768,height:1024}});
+  test('touch places stones in practice and local games',async({page})=>{
+    await practice(page,'easy');await point(page,7,7).tap();await ready(page);await expect(page.locator('.piece')).toHaveCount(2);
+    await page.locator('#undoButton').tap();await expect(page.locator('.piece')).toHaveCount(0);
+    await page.locator('#backHome').tap();await page.locator('#startLocal').tap();
+    await point(page,7,7).tap();await point(page,7,8).tap();await expect(page.locator('.piece')).toHaveCount(2);
+    await expect(page.locator('#turnText')).toHaveText('흑돌 차례');
+  });
 });

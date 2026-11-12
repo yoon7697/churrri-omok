@@ -30,9 +30,9 @@ body.playing-mode .info-panel ul{line-height:1.65}
 @media(max-width:750px){
  body.playing-mode #gameSection{padding-top:8px;padding-bottom:8px}
  body.playing-mode .game-layout{display:flex;flex-direction:column;gap:8px}
- body.playing-mode .board-panel{flex:0 0 auto;padding:5px}
+ body.playing-mode .board-panel{flex:0 0 auto;padding:5px;width:100%}
  body.playing-mode .board-wrap{width:min(100%,calc(100vw - 46px),calc(100dvh - 270px));max-height:none}
- body.playing-mode .game-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
+ body.playing-mode .game-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;width:100%}
  body.playing-mode .game-buttons,body.playing-mode .technical-note{grid-column:1/-1}
  body.playing-mode .section-head h2{font-size:20px}
  body.playing-mode .section-head p:last-child{font-size:11px}
