@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 async function create(page, rounds = 5) {
   await page.goto('/'); await page.locator('#createOnlineRoom').click();
   await page.locator(`input[name="rounds"][value="${rounds}"]`).check();
+  if(rounds===7)await page.screenshot({path:`test-results/lobby-create-${page.viewportSize().width}.png`,fullPage:true});
   await page.locator('#createRoomForm').getByRole('button', { name: '체험 방 만들기' }).click();
 }
 async function join(page, nickname = '용감한별') {
