@@ -27,3 +27,6 @@ body.live-playing .live-room-panel{grid-column:2;grid-row:1;max-height:100%;over
 body.live-playing .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 225px));max-width:none}
 body.live-playing #liveError:empty{display:none}
 @media(max-width:750px){body.live-playing .live-layout{display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain}body.live-playing .live-board-panel{order:-1;flex:none;padding:6px;width:100%}body.live-playing .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 290px))}body.live-playing .live-room-panel{padding:10px;flex:1;max-height:none;overflow:auto}body.live-playing .live-room-panel>.side-kicker,body.live-playing .live-room-panel>.room-code,body.live-playing .live-room-panel>.lobby-secondary,body.live-playing .live-room-panel>.field-hint{display:none}body.live-playing .live-room-panel>p{font-size:12px;margin:2px}body.live-playing .live-board-panel .field-hint,body.live-playing .board-caption{display:none}body.live-playing .live-game-status{font-size:16px;margin-bottom:7px}}
+
+.live-my-color{font-size:13px;color:#817987;white-space:nowrap}
+@media(max-width:750px){body.live-playing .live-room-panel{width:100%;flex:0 0 auto;min-height:0}}

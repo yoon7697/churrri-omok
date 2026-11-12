@@ -12,7 +12,11 @@ export async function api(base, path, data, token) {
   const result = await response.json(); if (!response.ok) throw Object.assign(Error(result.error || '연결할 수 없어요.'), {status:response.status}); return result;
 }
 export class Connection {
-  constructor(base, session, callbacks) { this.base=base;this.session=session;this.callbacks=callbacks;this.pending=new Map();this.generation=0;this.retries=0; }
+  constructor(base, session, callbacks) { this.base=base;this.session=session;this.callbacks=callbacks;this.pending=new Map();this.generation=0;this.retries=0;
+    this.offline=()=>{if(!this.stopped){this.callbacks.status('reconnecting');this.socket?.close();}};
+    this.online=()=>{if(!this.stopped){clearTimeout(this.retryTimer);this.socket?.close();this.connect();}};
+    globalThis.addEventListener?.('offline',this.offline);globalThis.addEventListener?.('online',this.online);
+  }
   connect() {
     const generation=++this.generation;this.stopped=false;this.callbacks.status('connecting');
     api(this.base,`/rooms/${this.session.roomId}/ticket`,{},this.session.token).then(({ticket})=>{
@@ -66,5 +70,5 @@ export class Connection {
     });
   }
   rejectPending(){for(const p of this.pending.values()){clearTimeout(p.timeout);p.reject(Error('연결이 끊겼어요. 복구 후 판을 확인해 주세요.'));}this.pending.clear();}
-  stop(){this.stopped=true;this.generation++;clearInterval(this.heartbeat);clearTimeout(this.retryTimer);this.rejectPending();this.socket?.close();}
+  stop(){globalThis.removeEventListener?.('offline',this.offline);globalThis.removeEventListener?.('online',this.online);this.stopped=true;this.generation++;clearInterval(this.heartbeat);clearTimeout(this.retryTimer);this.rejectPending();this.socket?.close();}
 }

@@ -5,7 +5,7 @@ const root=document.getElementById('onlineSection'), dialog=document.getElementB
 const params=new URLSearchParams(location.search),role=params.get('role')==='teacher'?'teacher':'student';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let base='';try{base=validateBase(API_BASE);}catch{}
-let session=null,state=null,connection=null,status='connecting',busy=false,practicing=false,fatal='',offset=0,notice='';
+let session=null,state=null,connection=null,status='connecting',busy=false,practicing=false,fatal='',offset=0,notice='',transitioning=false;
 const key=`omok-live-${role}`,pendingKey=`omok-live-pending-${role}`;
 function load(key){try{return JSON.parse(localStorage.getItem(key));}catch{return null;}}
 function save(key,value){try{localStorage.setItem(key,JSON.stringify(value));}catch{throw Error('이 브라우저에서는 참가 정보를 저장할 수 없어요. 일반 브라우저에서 다시 열어 주세요.');}}
@@ -36,11 +36,11 @@ function attach(){
     status(value){status=value;if(!practicing)render();},
     state(value){
       const wasPracticing=practicing;state=value;offset=value.serverNow-Date.now();
-      if(wasPracticing&&value.phase!=='lobby'&&value.phase!=='between'){practicing=false;showMainMenu();}
+      if(wasPracticing&&value.phase!=='lobby'&&value.phase!=='between'){practicing=false;transitioning=true;const info=document.getElementById('infoDialog');if(info.open)info.close();showMainMenu();transitioning=false;}
       if(!practicing)render();
     },
     error(text){if(!practicing)message(text);},
-    fatal(text){fatal=text;status='offline';if(practicing){practicing=false;showMainMenu();}render();}
+    fatal(text){fatal=text;status='offline';if(practicing){practicing=false;transitioning=true;const info=document.getElementById('infoDialog');if(info.open)info.close();showMainMenu();transitioning=false;}render();}
   });
   connection.connect();render();
 }
@@ -56,12 +56,13 @@ function render(){
       !active&&state.phase!=='finished'?'<button class="lobby-primary" data-live="practice" type="button">컴퓨터와 연습하기</button><p class="field-hint">선생님이 시작하면 내 경기로 자동 이동해요.</p>':''}
       ${match&&!active?`<div class="live-result" role="status"><h2>${match.result==='win'?'내가 이겼어요!':match.result==='loss'?'상대가 이겼어요!':match.result==='draw'?'무승부예요!':`${match.winnerColor===1?'흑돌':'백돌'} 승리!`}</h2><p>${e(match.names?.join(' vs '))}</p>${me?`<strong>내 누적 승점 ${me.points}점</strong>`:''}<p>승리 2점 · 무승부 1점 · 패배 0점</p></div>`:''}
       ${fatal?`<p class="lobby-error">${e(fatal)}</p><button class="lobby-secondary" data-live="retry" type="button">이 탭에서 다시 연결</button>`:''}
-    </section>${match?`<section class="lobby-card live-board-panel"><div class="live-game-status"><strong id="liveTurn">${active?(role==='teacher'?`${match.turn===1?'흑돌':'백돌'} 차례`:(match.myColor===match.turn?'내 차례':'상대 차례')):'경기 종료'}</strong><span id="liveTimer" aria-label="남은 경기 시간"></span></div>${role==='student'?`<p class="field-hint">내 돌: ${match.myColor===1?'흑돌':'백돌'}${active&&!match.opponentOnline?' · 상대가 다시 연결하고 있어요.':''}</p>`:''}<div class="board-wrap"><div id="liveBoard" class="board" role="grid" aria-label="온라인 15행 15열 오목판"></div></div><p class="board-caption">서버가 확인한 수만 표시돼요. 마지막 수는 빨간 점이에요.</p></section>`:'<aside class="lobby-card live-waiting"><span aria-hidden="true">⚫ ⚪</span><h2>두 친구가 모이면 시작해요</h2><p>같은 기기에서 번갈아 두는 대결과 달리,<br>각자의 화면에서 같은 오목판을 보게 돼요.</p></aside>'}</div>`));
+    </section>${match?`<section class="lobby-card live-board-panel"><div class="live-game-status"><strong id="liveTurn">${active?(role==='teacher'?`${match.turn===1?'흑돌':'백돌'} 차례`:(match.myColor===match.turn?'내 차례':'상대 차례')):'경기 종료'}</strong>${role==='student'?`<span class="live-my-color">내 돌: ${match.myColor===1?'흑돌':'백돌'}</span>`:''}<span id="liveTimer" aria-label="남은 경기 시간"></span></div>${role==='student'?`<p class="field-hint">내 돌: ${match.myColor===1?'흑돌':'백돌'}${active&&!match.opponentOnline?' · 상대가 다시 연결하고 있어요.':''}</p>`:''}<div class="board-wrap"><div id="liveBoard" class="board" role="grid" aria-label="온라인 15행 15열 오목판"></div></div><p class="board-caption">서버가 확인한 수만 표시돼요. 마지막 수는 빨간 점이에요.</p></section>`:'<aside class="lobby-card live-waiting"><span aria-hidden="true">⚫ ⚪</span><h2>두 친구가 모이면 시작해요</h2><p>같은 기기에서 번갈아 두는 대결과 달리,<br>각자의 화면에서 같은 오목판을 보게 돼요.</p></aside>'}</div>`));
   if(match&&state.phase!=='closed')renderBoard(match);updateTimer();
 }
 function renderBoard(match){
   const board=root.querySelector('#liveBoard');if(!board)return;const pos=i=>6.25+i*6.25;
   for(let i=0;i<15;i++){for(const axis of ['vertical','horizontal']){const line=document.createElement('div');line.className=`grid-line ${axis}`;line.style[axis==='vertical'?'left':'top']=`${pos(i)}%`;board.append(line);}}
+  for(const r of [3,7,11])for(const c of [3,7,11]){const star=document.createElement('div');star.className='star';star.style.top=`${pos(r)}%`;star.style.left=`${pos(c)}%`;board.append(star);}
   for(let r=0;r<15;r++)for(let c=0;c<15;c++){
     const button=document.createElement('button');button.type='button';button.className='intersection';button.style.top=`${pos(r)}%`;button.style.left=`${pos(c)}%`;button.setAttribute('role','gridcell');button.setAttribute('aria-label',`${r+1}행 ${c+1}열`);
     button.disabled=role!=='student'||match.status!=='active'||match.myColor!==match.turn||!!match.board[r][c]||busy||status!=='online'||!!fatal||Date.now()+offset>=match.deadlineAt;
@@ -111,6 +112,7 @@ if(base&&!params.has('demo')){
   document.querySelector('#createOnlineRoom span').textContent='연결 검증';
 }
 if(params.get('online')==='1'){
+  document.addEventListener('omok:home',()=>{if(!transitioning&&!practicing){connection?.stop();document.body.classList.remove('live-playing');history.replaceState(null,'',location.pathname);}});
   session=load(key);
   if(session?.base===base&&/^[A-Za-z0-9_-]{43}$/.test(session.token)&&/^[a-f0-9-]{36}$/.test(session.roomId))attach();else entry();
   setInterval(updateTimer,250);

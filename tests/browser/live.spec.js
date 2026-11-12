@@ -31,6 +31,8 @@ test('teacher start interrupts real AI practice and mobile board stays inside vi
   const board=await a.page.locator('#liveBoard').boundingBox();expect(board.width).toBeGreaterThan(200);expect(board.x).toBeGreaterThanOrEqual(0);expect(board.x+board.width).toBeLessThanOrEqual(390);expect(board.y+board.height).toBeLessThanOrEqual(844);
   await a.page.mouse.wheel(0,500);expect(await a.page.evaluate(()=>scrollY)).toBe(0);
   await a.page.screenshot({path:'test-results/live-mobile-game.png',fullPage:true});
+  await a.context.setOffline(true);await expect(a.page.locator('#liveConnection')).toContainText('다시 연결');
+  await a.context.setOffline(false);await expect(a.page.locator('#liveConnection')).toContainText('연결됨');await expect(a.page.locator('#liveBoard')).toBeVisible();
   await teacher.page.getByRole('button',{name:'현재 경기 무승부로 종료'}).click();await teacher.page.locator('#liveConfirm').click();await expect(a.page.locator('.live-result')).toContainText('무승부');
   await teacher.page.locator('#liveStart').click();await expect(a.page.locator('#liveTurn')).toBeVisible();
   await cleanup(teacher,a,b);

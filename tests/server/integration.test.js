@@ -54,7 +54,7 @@ test('real sockets coordinate play, hide names, reject privilege escalation and 
   assert.equal(JSON.stringify(aState).includes('비밀토끼'),false);assert.equal(JSON.stringify(bState).includes('비밀고래'),false);
   const black=aState.match.myColor===1?aw:bw,white=black===aw?bw:aw;
   const requestId=black.send('move',{matchId:aState.match.id,r:7,c:7,ply:0});await white.wait(e=>e.state?.match?.ply===1);
-  black.send('move',{matchId:aState.match.id,r:7,c:7,ply:0},requestId);await black.wait(e=>e.type==='ack'&&e.requestId===requestId);
+  black.send('move',{matchId:aState.match.id,r:7,c:7,ply:0},requestId);await black.wait(e=>e.type==='ack'&&e.requestId===requestId&&black.events.filter(v=>v.type==='ack'&&v.requestId===requestId).length>=2);
   const unauthorized=tw.send('move',{matchId:aState.match.id,r:0,c:0,ply:1});await tw.wait(e=>e.requestId===unauthorized&&e.type==='error');
   const state=await request(`/rooms/${t.roomId}/state`,undefined,t.token);assert.equal(state.data.match.ply,1);
   tw.send('draw');const end=(await aw.wait(e=>e.state?.match?.status==='draw')).state;assert.deepEqual(new Set(end.match.names),new Set(['비밀고래','비밀토끼']));assert.equal(end.me.points,1);
