@@ -42,3 +42,9 @@ body.live-playing #liveError:empty{display:none}
 @media(max-width:750px){.live-match-row{padding:10px}.live-standings{padding:16px}.live-standings th,.live-standings td{padding:10px 6px}}
 
 .live-new-room{display:block;margin:20px auto}
+
+.live-watch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0 0 12px;color:var(--blue)}
+.live-watch-head strong{font-size:14px}.live-watch-head .lobby-secondary{width:auto;min-height:40px;padding:8px 12px;font-size:12px}
+.live-watch-result{width:100%;text-align:center;font-size:14px;line-height:1.6;padding:10px;background:#eff4ff;border-radius:12px;margin:0 0 12px;overflow-wrap:anywhere}
+@media(max-width:750px){body.live-playing .live-watch-head{margin-bottom:6px}body.live-playing:has(#liveWatchTitle) .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 350px))}}
+@media(min-width:751px){body.live-playing:has(#liveWatchTitle) .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 285px))}}

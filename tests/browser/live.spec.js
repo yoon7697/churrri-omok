@@ -105,3 +105,37 @@ test('a completed tournament shows joint ranks and can start a fresh room',async
   await a.page.getByRole('button',{name:'다른 방 참가하기',exact:true}).click();await a.page.locator('#liveCode').fill(nextCode);await a.page.locator('#liveNickname').fill('새방학생');await a.page.getByRole('button',{name:'실제 방 참가하기'}).click();await expect(a.page.locator('#liveRoomCode')).toHaveText(nextCode);
  }finally{await cleanup(teacher,a,b);}
 });
+
+test('bye spectator watches live moves read-only, reconnects and returns automatically next round',async({browser})=>{
+ const {teacher,code}=await room(browser),students=[];
+ try{
+  for(let i=0;i<5;i++)students.push(await join(browser,code,`관전학생${i}`));await teacher.page.locator('#liveStart').click();
+  let viewer;const playing=[];
+  for(const u of students){await expect(u.page.locator('.live-match-row.is-mine')).toHaveCount(1);if(await u.page.locator('.live-result').count())viewer=u;else playing.push(u);}
+  expect(viewer).toBeTruthy();const id=await playing[0].page.locator('.live-match-row.is-mine').getAttribute('data-match');
+  const row=viewer.page.locator(`.live-match-row[data-match="${id}"]`);await row.getByRole('button',{name:/관전하기/}).click();await expect(viewer.page.locator('#liveWatchTitle')).toContainText('보기 전용');
+  await expect(viewer.page.locator('#liveBoard .intersection:enabled')).toHaveCount(0);await expect(viewer.page.locator('.live-my-color')).toHaveCount(0);
+  await expect(playing[0].page.getByRole('button',{name:/관전하기/})).toHaveCount(0);
+  const same=[];for(const u of playing)if(await u.page.locator('.live-match-row.is-mine').getAttribute('data-match')===id)same.push(u);
+  const black=await same[0].page.locator('#liveTurn').innerText()==='내 차례'?same[0]:same[1];await point(black.page,7,7).click();await expect(viewer.page.locator('#liveBoard .piece')).toHaveCount(1);
+  for(const u of same){const index=students.indexOf(u);await expect(viewer.page.locator('#onlineSection')).not.toContainText(`관전학생${index}`);}
+  await viewer.page.reload();await expect(viewer.page.locator('#liveWatchTitle')).toBeVisible();await expect(viewer.page.locator('#liveBoard .piece')).toHaveCount(1);await expect(viewer.page.locator('#liveBoard .intersection:enabled')).toHaveCount(0);
+  await viewer.page.setViewportSize({width:390,height:844});let board=await viewer.page.locator('#liveBoard').boundingBox();expect(board.x+board.width).toBeLessThanOrEqual(390);expect(board.y+board.height).toBeLessThanOrEqual(844);await viewer.page.screenshot({path:'test-results/spectator-mobile.png',fullPage:true});
+  await viewer.page.setViewportSize({width:1024,height:768});board=await viewer.page.locator('#liveBoard').boundingBox();expect(board.x+board.width).toBeLessThanOrEqual(1024);expect(board.y+board.height).toBeLessThanOrEqual(768);await viewer.page.screenshot({path:'test-results/spectator-tablet.png',fullPage:true});
+  await viewer.context.setOffline(true);await expect(viewer.page.locator('#liveConnection')).toContainText('다시 연결');await viewer.context.setOffline(false);await expect(viewer.page.locator('#liveConnection')).toContainText('연결됨');await expect(viewer.page.locator('#liveWatchTitle')).toBeVisible();
+  await teacher.page.locator(`.live-match-row[data-match="${id}"]`).getByRole('button',{name:/무승부 종료/}).click();await teacher.page.locator('#liveConfirm').click();await expect(viewer.page.locator('.live-watch-result')).toContainText('무승부');await expect(viewer.page.locator('#liveTurn')).toHaveText('관전 경기 종료');
+  await teacher.page.getByRole('button',{name:'현재 경기 무승부로 종료',exact:true}).click();await teacher.page.locator('#liveConfirm').click();await teacher.page.locator('#liveStart').click();await expect(viewer.page.locator('#liveWatchTitle')).toHaveCount(0);await expect(viewer.page.locator('.live-my-color')).toBeVisible();await expect(viewer.page.locator('#liveTurn')).toHaveText(/내 차례|상대 차례/);
+ }finally{await cleanup(teacher,...students);}
+});
+
+test('finished students and teacher can switch watched games without changing results',async({browser})=>{
+ const {teacher,code}=await room(browser),students=[];
+ try{
+  for(let i=0;i<6;i++)students.push(await join(browser,code,`전환학생${i}`));await teacher.page.locator('#liveStart').click();await expect(teacher.page.locator('.live-match-row')).toHaveCount(3);
+  const id=await students[0].page.locator('.live-match-row.is-mine').getAttribute('data-match');await teacher.page.locator(`.live-match-row[data-match="${id}"]`).getByRole('button',{name:/무승부 종료/}).click();await teacher.page.locator('#liveConfirm').click();await expect(students[0].page.locator('.live-result')).toContainText('무승부');
+  const buttons=students[0].page.getByRole('button',{name:/관전하기/});await expect(buttons).toHaveCount(2);await buttons.first().click();await expect(students[0].page.locator('#liveWatchTitle')).toBeVisible();const firstTitle=await students[0].page.locator('#liveWatchTitle').innerText();
+  await students[0].page.getByRole('button',{name:/관전하기/}).filter({visible:true}).last().click();await expect(students[0].page.locator('#liveWatchTitle')).not.toHaveText(firstTitle);
+  await expect(students[0].page.locator('.live-result')).toContainText('내 누적 승점 1점');await students[0].page.getByRole('button',{name:'관전 나가기',exact:true}).click();await expect(students[0].page.locator('#liveWatchTitle')).toHaveCount(0);await expect(students[0].page.locator('#liveTurn')).toHaveText('경기 종료');
+  await teacher.page.locator('.live-match-row').filter({hasText:'진행 중'}).getByRole('button',{name:/관전하기/}).first().click();await expect(teacher.page.locator('#liveWatchTitle')).toBeVisible();await expect(teacher.page.locator('#liveBoard .intersection:enabled')).toHaveCount(0);await teacher.page.screenshot({path:'test-results/spectator-teacher.png',fullPage:true});
+ }finally{await cleanup(teacher,...students);}
+});

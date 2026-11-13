@@ -96,6 +96,15 @@ export function command(room, actorId, action, data, onlineIds, now, random = Ma
         status: 'bye', winner: bye.id, reason: 'bye', names: { [bye.id]: bye.nickname } });
     }
     room.phase = 'playing';
+    for (const p of [room.teacher, ...room.participants]) delete p.watching;
+  } else if (action === 'watch') {
+    const ownActive = currentMatches(room).some(m => m.status === 'active' && m.players.includes(actorId));
+    if (!teacher && ownActive) fail('내 경기가 끝난 뒤 관전할 수 있어요.', 403);
+    const match = currentMatches(room).find(m => m.id === data.matchId && m.status !== 'bye');
+    if (!match || match.players.includes(actorId)) fail('관전할 다른 경기를 선택해 주세요.', 404);
+    (teacher ? room.teacher : me).watching = { matchId: match.id, round: room.round };
+  } else if (action === 'unwatch') {
+    delete (teacher ? room.teacher : me).watching;
   } else if (action === 'move') {
     const match = currentMatches(room).find(m => m.id === data.matchId);
     if (teacher || !match || match.status !== 'active' || !match.players.includes(actorId)) fail('진행 중인 내 경기가 없어요.', 403);
@@ -130,12 +139,13 @@ export function command(room, actorId, action, data, onlineIds, now, random = Ma
 }
 function matchView(room, match, actorId, onlineIds) {
   const teacher = actorId === 'teacher', active = match.status === 'active', myColor = match.players.indexOf(actorId) + 1;
+  const observing = myColor === 0;
   const names = match.players.map(id => match.names?.[id] || room.participants.find(p => p.id === id)?.nickname || '참가자');
   return { id: match.id, number: match.number || 1, board: match.board, turn: match.turn, ply: match.ply, lastMove: match.lastMove,
     deadlineAt: match.deadlineAt, status: match.status, reason: match.reason, myColor,
     opponentOnline: myColor && match.players.length === 2 ? onlineIds.includes(match.players[myColor === 1 ? 1 : 0]) : undefined,
     names: !active || teacher ? names : undefined,
-    result: active ? null : match.status === 'bye' ? 'bye' : (match.winner ? (match.winner === actorId ? 'win' : teacher ? 'decided' : 'loss') : 'draw'),
+    result: active ? null : match.status === 'bye' ? 'bye' : (match.winner ? (observing ? 'decided' : match.winner === actorId ? 'win' : 'loss') : 'draw'),
     winnerColor: match.winner ? match.players.indexOf(match.winner) + 1 : 0 };
 }
 export function view(room, actorId, onlineIds, now) {
@@ -164,6 +174,10 @@ export function view(room, actorId, onlineIds, now) {
     if (match.status === 'bye') out.bye = true;
     else out.match = matchView(room, match, actorId, onlineIds);
   }
+  out.canWatch = room.round > 0 && room.phase !== 'closed' && (teacher || !matches.some(m => m.status === 'active' && m.players.includes(actorId)));
+  const selection = (teacher ? room.teacher : me).watching;
+  const watched = out.canWatch && selection?.round === room.round && matches.find(m => m.id === selection.matchId && m.status !== 'bye' && !m.players.includes(actorId));
+  if (watched) out.spectating = { ...matchView(room, watched, actorId, onlineIds), readOnly: true };
   if (room.phase === 'finished') {
     const sorted = room.participants.filter(p => !p.removed).sort((a, b) => b.points - a.points);
     out.standings = sorted.map((p, i) => ({ nickname: p.nickname, points: p.points, rank: sorted.findIndex(other => other.points === p.points) + 1, me: p.id === actorId }));

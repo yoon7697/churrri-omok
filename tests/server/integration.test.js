@@ -119,3 +119,23 @@ test('five students get one bye; new arrival waits for next round; full class ca
  await Promise.all(classSockets.map(w=>w.wait(e=>e.state?.match?.ply===1)));
  fullTeacher.send('close');await fullTeacher.wait(e=>e.state?.phase==='closed');
 });
+
+test('spectators receive live anonymous updates, survive restart and return to their next match',async()=>{
+ const t=await setup(),people=[];for(let i=0;i<5;i++)people.push(await student(t,`관전친구${i}`));
+ let tw=await socket(t);const ws=[];for(const p of people)ws.push(await socket(p));await tw.wait(e=>e.state?.onlineCount===5);tw.send('start');
+ const states=await Promise.all(ws.map(w=>w.wait(e=>e.state?.phase==='playing'))),byeIndex=states.findIndex(e=>e.state.bye);
+ const game=states.find(e=>e.state.match)?.state.match,blackIndex=states.findIndex(e=>e.state.match?.id===game.id&&e.state.match.myColor===1);
+ const opponent=states.findIndex(e=>e.state.match&&e.state.match.id!==game.id);
+ const denied=ws[opponent].send('watch',{matchId:game.id});await ws[opponent].wait(e=>e.type==='error'&&e.requestId===denied);
+ ws[byeIndex].send('watch',{matchId:game.id});let watched=(await ws[byeIndex].wait(e=>e.state?.spectating?.id===game.id)).state;
+ assert.equal(watched.spectating.readOnly,true);assert.equal(watched.spectating.names,undefined);assert.equal(watched.spectating.myColor,0);
+ const forged=ws[byeIndex].send('move',{matchId:game.id,ply:0,r:7,c:7});await ws[byeIndex].wait(e=>e.type==='error'&&e.requestId===forged);
+ ws[blackIndex].send('move',{matchId:game.id,ply:0,r:7,c:7});watched=(await ws[byeIndex].wait(e=>e.state?.spectating?.ply===1)).state;assert.equal(watched.spectating.board[7][7],1);assert.equal(watched.me.points,2);
+ for(const w of [tw,...ws])w.ws.close();await mf.dispose();mf=new Miniflare(options);
+ const restored=await request(`/rooms/${t.roomId}/state`,undefined,people[byeIndex].token);assert.equal(restored.data.spectating.id,game.id);assert.equal(restored.data.spectating.ply,1);
+ tw=await socket(t);const back=[];for(const p of people)back.push(await socket(p));
+ tw.send('watch',{matchId:game.id});await tw.wait(e=>e.state?.spectating?.id===game.id);const unwatch=tw.send('unwatch');await tw.wait(e=>e.type==='ack'&&e.requestId===unwatch);await tw.wait(e=>e.state?.version>restored.data.version&&!e.state.spectating);
+ tw.send('draw',{matchId:game.id});const ended=(await back[byeIndex].wait(e=>e.state?.spectating?.status==='draw')).state;assert.equal(ended.spectating.names.length,2);assert.equal(ended.spectating.result,'draw');
+ tw.send('draw');await tw.wait(e=>e.state?.phase==='between');tw.send('start');const next=(await back[byeIndex].wait(e=>e.state?.round===2)).state;assert.equal(next.spectating,undefined);assert.equal(next.match.status,'active');assert.equal(next.canWatch,false);
+ tw.send('close');await tw.wait(e=>e.state?.phase==='closed');
+});
