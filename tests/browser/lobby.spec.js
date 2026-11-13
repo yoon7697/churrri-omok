@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+// These cases verify the preserved offline lobby demo; real online flows live in live.spec.js.
+test.beforeEach(async ({page})=>{await page.route('**/live/config.js',route=>route.fulfill({contentType:'text/javascript',body:"export const API_BASE='';"}));});
 async function create(page, rounds = 5) {
   await page.goto('/'); await page.locator('#createOnlineRoom').click();
   await page.locator(`input[name="rounds"][value="${rounds}"]`).check();
