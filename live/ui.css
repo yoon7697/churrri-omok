@@ -48,3 +48,5 @@ body.live-playing #liveError:empty{display:none}
 .live-watch-result{width:100%;text-align:center;font-size:14px;line-height:1.6;padding:10px;background:#eff4ff;border-radius:12px;margin:0 0 12px;overflow-wrap:anywhere}
 @media(max-width:750px){body.live-playing .live-watch-head{margin-bottom:6px}body.live-playing:has(#liveWatchTitle) .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 350px))}}
 @media(min-width:751px){body.live-playing:has(#liveWatchTitle) .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 285px))}}
+
+.live-roster-details{margin:16px 0;border:1px solid #e5e8f0;border-radius:12px;padding:12px}.live-roster-details summary{cursor:pointer;font-size:14px;font-weight:750;color:var(--blue);padding:6px 0}.live-roster-details .participant-grid{margin-bottom:0}
