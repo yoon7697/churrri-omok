@@ -58,11 +58,11 @@ body.live-playing #liveError:empty{display:none}
 .live-roster-empty{text-align:center;padding:38px 12px;line-height:1.8}.live-roster-empty>span{font-size:42px}.live-roster-empty h3{font-size:23px}.live-roster-empty p{font-size:13px;color:#817987}
 @media(max-width:500px){.live-roster-panel .participant-grid{grid-template-columns:1fr}.live-roster-heading h2{font-size:21px}}
 
-.live-invite-qr{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:4px 10px 10px;margin:0 0 14px;border:1px solid #d9e5f9;border-radius:16px;background:#fff;color:var(--blue);font:inherit;font-size:13px;font-weight:750;cursor:pointer}
-.live-invite-qr>span:first-child{display:block;width:120px;max-width:100%}.live-invite-qr svg,.live-qr-large svg{display:block;width:100%;height:auto;aspect-ratio:1;shape-rendering:crispEdges}
+.live-invite-qr{display:flex;align-items:center;justify-content:center;gap:10px;text-align:left;width:100%;padding:6px 10px;margin:0 0 14px;border:1px solid #d9e5f9;border-radius:16px;background:#fff;color:var(--blue);font:inherit;font-size:13px;font-weight:750;cursor:pointer}
+.live-invite-qr>span:first-child{display:block;width:112px;max-width:50%;flex:none}.live-invite-qr svg,.live-qr-large svg{display:block;width:100%;height:auto;aspect-ratio:1;shape-rendering:crispEdges}
 .live-invite-qr:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .lobby-dialog.live-qr-dialog{width:min(92vw,720px);max-height:92dvh;overflow:auto;padding:24px;text-align:center}
-.live-qr-dialog .dialog-head{margin-bottom:12px;text-align:left}.live-qr-large{width:min(100%,480px,54dvh);margin:auto;background:#fff}
+.live-qr-dialog .dialog-head{margin-bottom:12px;text-align:left}.live-qr-large{width:min(100%,480px,max(160px,calc(100dvh - 380px)));margin:auto;background:#fff}
 .live-qr-code{font-size:18px;margin:6px 0 10px}.live-qr-code strong{display:block;font-size:42px;letter-spacing:.22em;padding-left:.22em;color:var(--navy,#202942)}
 .live-qr-help{font-size:15px;line-height:1.7;color:#746b79;margin:10px 0 16px}.live-qr-dialog>.lobby-secondary{width:100%;max-width:320px}
 #liveQrNotice{font-size:13px;color:var(--blue);line-height:1.6;margin:10px 0 0}#liveQrNotice:empty{display:none}

@@ -38,7 +38,7 @@ function attach(){
     status(value){status=value;if(!practicing)render();},
     state(value){
       const requestedCode=invitedCode;invitedCode=null;
-      if(requestedCode&&requestedCode!==value.code){connection.stop();session=null;state=null;entry();return;}
+      if(requestedCode&&requestedCode!==value.code){connection.stop();session=null;state=null;status='connecting';entry();return;}
       if(session&&session.code!==value.code){session.code=value.code;try{save(key,session);}catch{}}
       // Vercel and Worker deploy independently; accept the previous two-player snapshot during rollout.
       if(!Array.isArray(value.matches))value.matches=value.match?[{...value.match,number:1,mine:role==='student',connected:value.onlineCount}]:[];
