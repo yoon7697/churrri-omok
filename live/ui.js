@@ -8,6 +8,7 @@ const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 let base='';try{base=validateBase(API_BASE);}catch{}
 let session=null,state=null,connection=null,status='connecting',busy=false,practicing=false,fatal='',offset=0,notice='',transitioning=false;
 const key=`omok-live-${role}`,pendingKey=`omok-live-pending-${role}`;
+let invitedCode=role==='student'&&/^\d{4}$/.test(params.get('code')||'')?params.get('code'):null;
 function load(key){try{return JSON.parse(localStorage.getItem(key));}catch{return null;}}
 function save(key,value){try{localStorage.setItem(key,JSON.stringify(value));}catch{throw Error('이 브라우저에서는 참가 정보를 저장할 수 없어요. 일반 브라우저에서 다시 열어 주세요.');}}
 function credential(){let p=load(pendingKey);if(!p?.token||p.base!==base)p={token:newToken(),base};save(pendingKey,p);return p.token;}
@@ -27,7 +28,7 @@ function entry(){document.body.classList.remove('live-playing');
     try{
       const f=new FormData(event.currentTarget),token=credential();
       const result=await api(base,role==='teacher'?'/rooms':'/join',role==='teacher'?{rounds:Number(f.get('rounds')),token}:{code:f.get('code'),nickname:f.get('nickname'),token});
-      session={...result,token,base};save(key,session);try{localStorage.removeItem(pendingKey);}catch{}attach();
+      session={...result,token,base,code:role==='student'?String(f.get('code')):result.code};invitedCode=null;save(key,session);try{localStorage.removeItem(pendingKey);}catch{}attach();
     }catch(error){message(error.message);}finally{busy=false;if(button.isConnected)button.disabled=false;}
   });
 }
@@ -36,6 +37,9 @@ function attach(){
   connection=new Connection(base,session,{
     status(value){status=value;if(!practicing)render();},
     state(value){
+      const requestedCode=invitedCode;invitedCode=null;
+      if(requestedCode&&requestedCode!==value.code){connection.stop();session=null;state=null;entry();return;}
+      if(session&&session.code!==value.code){session.code=value.code;try{save(key,session);}catch{}}
       // Vercel and Worker deploy independently; accept the previous two-player snapshot during rollout.
       if(!Array.isArray(value.matches))value.matches=value.match?[{...value.match,number:1,mine:role==='student',connected:value.onlineCount}]:[];
       const wasPracticing=practicing;state=value;offset=value.serverNow-Date.now();
@@ -143,6 +147,6 @@ if(base&&!params.has('demo')){
 if(params.get('online')==='1'){
   document.addEventListener('omok:home',()=>{if(!transitioning&&!practicing){connection?.stop();document.body.classList.remove('live-playing');history.replaceState(null,'',location.pathname);}});
   session=load(key);
-  if(session?.base===base&&/^[A-Za-z0-9_-]{43}$/.test(session.token)&&/^[a-f0-9-]{36}$/.test(session.roomId))attach();else entry();
+  if(session?.base===base&&/^[A-Za-z0-9_-]{43}$/.test(session.token)&&/^[a-f0-9-]{36}$/.test(session.roomId)&&(!invitedCode||!session.code||invitedCode===session.code))attach();else{session=null;invitedCode=null;entry();}
   setInterval(updateTimer,250);
 }

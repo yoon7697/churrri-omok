@@ -151,7 +151,7 @@ test('finished students and teacher can switch watched games without changing re
 
 
 test('teacher QR decodes to a clean student invitation and stays usable during live updates',async({browser})=>{
-  const {teacher,code}=await room(browser);let student;
+  const {teacher,code}=await room(browser);let student,nextTeacher;
   try{
     await teacher.context.grantPermissions(['clipboard-read','clipboard-write']);
     await teacher.page.getByRole('button',{name:'학생 입장 QR코드 크게 보기',exact:true}).click();
@@ -173,6 +173,7 @@ test('teacher QR decodes to a clean student invitation and stays usable during l
     await expect(student.page.locator('#liveCode')).toHaveValue(code);
     await student.page.locator('#liveNickname').fill('큐알학생');await student.page.getByRole('button',{name:'실제 방 참가하기'}).click();
     await expect(student.page.locator('#onlineTitle')).toContainText('큐알학생');
+    await student.page.goto(decoded.data);await expect(student.page.locator('#onlineTitle')).toContainText('큐알학생');
     await expect(student.page.locator('[data-live=qr]')).toHaveCount(0);await expect(student.page.locator('.preview-banner')).toHaveCount(0);
     await expect(teacher.page.locator('#lobbyDialog')).toBeVisible();await expect(teacher.page.locator('#liveTeacherRoster')).toContainText('큐알학생');
     await teacher.page.setViewportSize({width:390,height:844});
@@ -181,5 +182,10 @@ test('teacher QR decodes to a clean student invitation and stays usable during l
     await teacher.page.keyboard.press('Escape');await expect(teacher.page.locator('#lobbyDialog')).toBeHidden();
     await teacher.page.getByRole('button',{name:'학생 입장 QR코드 크게 보기',exact:true}).click();await teacher.page.locator('#liveDialogClose').click();await expect(teacher.page.locator('#lobbyDialog')).toBeHidden();
     await teacher.page.getByRole('button',{name:'큐알학생 관리',exact:true}).click();await expect(teacher.page.locator('#lobbyDialog')).not.toHaveClass(/live-qr-dialog/);
-  }finally{await cleanup(teacher,...(student?[student]:[]));}
+    const next=await room(browser);nextTeacher=next.teacher;
+    const nextURL=new URL(decoded.data);nextURL.searchParams.set('code',next.code);
+    await student.page.goto(nextURL.href);await expect(student.page.locator('#liveCode')).toHaveValue(next.code);
+    await student.page.locator('#liveNickname').fill('새큐알학생');await student.page.getByRole('button',{name:'실제 방 참가하기'}).click();
+    await expect(nextTeacher.page.locator('#liveTeacherRoster')).toContainText('새큐알학생');
+  }finally{await cleanup(teacher,...(student?[student]:[]),...(nextTeacher?[nextTeacher]:[]));}
 });
