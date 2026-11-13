@@ -3,12 +3,13 @@ test.skip(!process.env.LIVE_TEST_SERVER,'Requires the real local Cloudflare runt
 const origin='http://127.0.0.1:8080';
 async function pageFor(browser,role){const context=await browser.newContext({baseURL:origin});await context.route('**/live/config.js',route=>route.fulfill({contentType:'text/javascript',body:"export const API_BASE='http://127.0.0.1:8787';"}));const page=await context.newPage();await page.goto(`/?online=1&role=${role}`);return{context,page};}
 async function room(browser){const teacher=await pageFor(browser,'teacher');await teacher.page.getByRole('button',{name:'실제 방 만들기',exact:true}).click();await expect(teacher.page.locator('#liveRoomCode')).toHaveText(/^\d{4}$/);const code=await teacher.page.locator('#liveRoomCode').innerText();return{teacher,code};}
-async function join(browser,code,name){const student=await pageFor(browser,'student');await student.page.locator('#liveCode').fill(code);await student.page.locator('#liveNickname').fill(name);await student.page.getByRole('button',{name:'실제 방 참가하기'}).click();await expect(student.page.locator('#liveRoomCode')).toHaveText(code);return student;}
+async function join(browser,code,name){const student=await pageFor(browser,'student');await student.page.locator('#liveCode').fill(code);await student.page.locator('#liveNickname').fill(name);await student.page.getByRole('button',{name:'실제 방 참가하기'}).click();await expect(student.page.locator('#liveEntryForm')).toHaveCount(0);await expect(student.page.locator('#liveConnection')).toHaveText('● 연결됨');return student;}
 async function cleanup(...users){for(const u of users)await u.context.close();}
 const point=(p,r,c)=>p.locator('#liveBoard .intersection').nth(r*15+c);
 
 test('three isolated browsers play, preserve anonymous names and restore after reload',async({browser})=>{
   const {teacher,code}=await room(browser),a=await join(browser,code,'바다학생'),b=await join(browser,code,'구름학생');
+  await expect(a.page.locator('.preview-banner')).toHaveCount(0);await expect(a.page.locator('#liveRoomCode')).toHaveCount(0);await expect(a.page.locator('[data-live=copy]')).toHaveCount(0);
   await teacher.page.locator('#liveStart').click();await expect(a.page.locator('#liveBoard')).toBeVisible();await expect(b.page.locator('#liveBoard')).toBeVisible();
   await expect(a.page.locator('#onlineSection')).not.toContainText('구름학생');await expect(b.page.locator('#onlineSection')).not.toContainText('바다학생');
   const black=await a.page.locator('#liveTurn').innerText()==='내 차례'?a:b,white=black===a?b:a;
@@ -19,6 +20,7 @@ test('three isolated browsers play, preserve anonymous names and restore after r
     await point(black.page,7,4+i).click();if(i<3)await expect(white.page.locator('#liveTurn')).toHaveText('내 차례');
   }
   await expect(black.page.locator('.live-result')).toContainText('내가 이겼어요');await expect(white.page.locator('.live-result')).toContainText('상대가 이겼어요');
+  await expect(black.page.locator('#liveRoomCode')).toHaveCount(0);await expect(black.page.locator('[data-live=copy]')).toHaveCount(0);await expect(black.page.locator('.preview-banner')).toHaveCount(0);
   await expect(black.page.locator('.live-result')).toContainText('2점');await expect(white.page.locator('.live-result')).toContainText('바다학생');await expect(white.page.locator('.live-result')).toContainText('구름학생');
   await teacher.page.screenshot({path:'test-results/live-teacher-result.png',fullPage:true});
   await cleanup(teacher,a,b);
@@ -50,6 +52,11 @@ test('five students play two games with a bye, private lists and teacher-control
   const {teacher,code}=await room(browser),students=[];
   try{
     for(let i=0;i<5;i++)students.push(await join(browser,code,`동시학생${i}`));
+    await expect(teacher.page.locator('.preview-tag')).toHaveCount(0);await expect(teacher.page.locator('.preview-banner')).toHaveText('최대 40명이 동시에 참가해요. 승리·부전승 2점, 무승부 1점 · 내 경기가 끝나면 다른 경기를 관전해 보세요.');
+    await expect(teacher.page.locator('#liveTeacherRoster .participant-card')).toHaveCount(5);await expect(teacher.page.locator('.live-room-panel .participant-card')).toHaveCount(0);
+    const mainRoster=await teacher.page.locator('#liveTeacherRoster').boundingBox(),sidebar=await teacher.page.locator('.live-room-panel').boundingBox();expect(mainRoster.x).toBeGreaterThan(sidebar.x+sidebar.width);expect(mainRoster.width).toBeGreaterThan(sidebar.width);
+    await teacher.page.screenshot({path:'test-results/teacher-wide-waiting.png',fullPage:true});
+
     await teacher.page.locator('#liveStart').click();
     await expect(teacher.page.locator('.live-match-row')).toHaveCount(3);
     const groups=new Map();let firstBye=-1;
@@ -102,7 +109,7 @@ test('a completed tournament shows joint ranks and can start a fresh room',async
   await expect(a.page.locator('.live-standings tbody tr')).toHaveCount(2);await expect(a.page.locator('.live-standings tbody td:first-child')).toHaveText(['1위','1위']);
   await teacher.page.getByRole('button',{name:'새 대회 방 만들기',exact:true}).click();await teacher.page.getByRole('button',{name:'실제 방 만들기',exact:true}).click();await expect(teacher.page.locator('#liveRoomCode')).toHaveText(/^\d{4}$/);
   const nextCode=await teacher.page.locator('#liveRoomCode').innerText();expect(nextCode).not.toBe(code);
-  await a.page.getByRole('button',{name:'다른 방 참가하기',exact:true}).click();await a.page.locator('#liveCode').fill(nextCode);await a.page.locator('#liveNickname').fill('새방학생');await a.page.getByRole('button',{name:'실제 방 참가하기'}).click();await expect(a.page.locator('#liveRoomCode')).toHaveText(nextCode);
+  await a.page.getByRole('button',{name:'다른 방 참가하기',exact:true}).click();await a.page.locator('#liveCode').fill(nextCode);await a.page.locator('#liveNickname').fill('새방학생');await a.page.getByRole('button',{name:'실제 방 참가하기'}).click();await expect(a.page.locator('#onlineTitle')).toContainText('새방학생');
  }finally{await cleanup(teacher,a,b);}
 });
 

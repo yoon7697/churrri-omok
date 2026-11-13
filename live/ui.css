@@ -50,3 +50,10 @@ body.live-playing #liveError:empty{display:none}
 @media(min-width:751px){body.live-playing:has(#liveWatchTitle) .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 285px))}}
 
 .live-roster-details{margin:16px 0;border:1px solid #e5e8f0;border-radius:12px;padding:12px}.live-roster-details summary{cursor:pointer;font-size:14px;font-weight:750;color:var(--blue);padding:6px 0}.live-roster-details .participant-grid{margin-bottom:0}
+
+.live-roster-panel{min-width:0;margin-top:20px}.live-layout>.live-roster-panel{margin-top:0}
+.live-roster-heading{margin-bottom:18px}.live-roster-heading h2{font-size:23px;margin:0 0 8px}.live-roster-heading h2 small{font-size:15px;color:var(--blue);margin-left:8px}.live-roster-heading p{font-size:13px;line-height:1.7;color:#817987;margin:0}
+.live-roster-panel .participant-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.live-roster-panel .student-details{min-width:0}.live-roster-panel .student-details>b{overflow-wrap:anywhere}.live-roster-panel .lobby-text-button{margin-left:auto;flex:none;min-height:44px;padding:8px}
+.live-roster-empty{text-align:center;padding:38px 12px;line-height:1.8}.live-roster-empty>span{font-size:42px}.live-roster-empty h3{font-size:23px}.live-roster-empty p{font-size:13px;color:#817987}
+@media(max-width:500px){.live-roster-panel .participant-grid{grid-template-columns:1fr}.live-roster-heading h2{font-size:21px}}
