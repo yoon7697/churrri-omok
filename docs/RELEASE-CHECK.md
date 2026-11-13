@@ -22,7 +22,8 @@
 | CI | [GitHub Actions 43401687136](https://github.com/yoon7697/churrri-omok/actions/runs/43401687136) 성공. 합계 178개. 변경 없는 검사 결과를 재사용했습니다. |
 | Vercel | 해당 코드의 미리보기 배포 READY 확인. |
 | Cloudflare 배포 파일 | `wrangler deploy --config server/wrangler.jsonc --dry-run` 성공. 실제 배포·데이터 삭제 없이 번들과 바인딩 확인. |
-| 공개 서버 기본 응답 | `/health` HTTP 200, `stage: classroom-online`, 정원 40 확인. |
+| 공개 서버 기본 응답 | `/health` HTTP 200, `stage: classroom-online`, 정원 40 확인. 미리보기·운영 origin 허용, 미허용 origin 거절과 무자격 상태 조회 거절 확인. |
+| 공개 서버 5인 연결 | 독립 학생 5명의 두 판 동시 진행·부전승 2점·익명 관전·착수 실시간 반영·관전자 위조 착수 차단·진행 학생의 관전 거절·실제 연결 재접속·승리 2점/패배 0점·종료 후 이름 공개 확인. 전체 종료 전 다음 라운드 차단, 다음 라운드 관전 해제, 3라운드 대회 종료·공동순위까지 확인하고 테스트 방을 닫았습니다. |
 
 기술 검사에서 정식 반영을 막는 오류는 발견하지 않았습니다. 아래의 실제 기기 확인은 아직 남아 있습니다.
 
