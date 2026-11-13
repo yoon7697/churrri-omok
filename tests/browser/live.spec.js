@@ -89,3 +89,19 @@ test('a late student can practice during other games and joins the next round au
   await late.page.locator('#practiceHome').click();await expect(late.page.locator('.live-result')).toContainText('부전승');
  }finally{await cleanup(teacher,...students,...(late?[late]:[]));}
 });
+
+
+test('a completed tournament shows joint ranks and can start a fresh room',async({browser})=>{
+ const {teacher,code}=await room(browser),a=await join(browser,code,'결과학생가'),b=await join(browser,code,'결과학생나');
+ try{
+  for(let i=0;i<3;i++){
+   await teacher.page.locator('#liveStart').click();await expect(a.page.locator('#liveTurn')).toBeVisible();
+   await teacher.page.getByRole('button',{name:'현재 경기 무승부로 종료',exact:true}).click();await teacher.page.locator('#liveConfirm').click();
+   if(i<2)await expect(teacher.page.locator('#liveStart')).toBeEnabled();
+  }
+  await expect(a.page.locator('.live-standings tbody tr')).toHaveCount(2);await expect(a.page.locator('.live-standings tbody td:first-child')).toHaveText(['1위','1위']);
+  await teacher.page.getByRole('button',{name:'새 대회 방 만들기',exact:true}).click();await teacher.page.getByRole('button',{name:'실제 방 만들기',exact:true}).click();await expect(teacher.page.locator('#liveRoomCode')).toHaveText(/^\d{4}$/);
+  const nextCode=await teacher.page.locator('#liveRoomCode').innerText();expect(nextCode).not.toBe(code);
+  await a.page.getByRole('button',{name:'다른 방 참가하기',exact:true}).click();await a.page.locator('#liveCode').fill(nextCode);await a.page.locator('#liveNickname').fill('새방학생');await a.page.getByRole('button',{name:'실제 방 참가하기'}).click();await expect(a.page.locator('#liveRoomCode')).toHaveText(nextCode);
+ }finally{await cleanup(teacher,a,b);}
+});

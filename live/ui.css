@@ -40,3 +40,5 @@ body.live-playing #liveError:empty{display:none}
 .live-wait-notice{padding:14px;background:#eff4ff;border-radius:14px;font-size:14px;line-height:1.8}
 .live-standings{margin-top:24px;background:#fffdf8;border-radius:20px;padding:24px}.live-standings h2{font-size:22px;margin-top:0}.live-standings table{border-collapse:collapse;width:100%;text-align:left}.live-standings th,.live-standings td{padding:12px;border-bottom:1px solid #e5e8f0;overflow-wrap:anywhere}
 @media(max-width:750px){.live-match-row{padding:10px}.live-standings{padding:16px}.live-standings th,.live-standings td{padding:10px 6px}}
+
+.live-new-room{display:block;margin:20px auto}
