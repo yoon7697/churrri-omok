@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import jsQR from 'jsqr';
 test.skip(!process.env.LIVE_TEST_SERVER,'Requires the real local Cloudflare runtime.');
 const origin='http://127.0.0.1:8080';
 async function pageFor(browser,role){const context=await browser.newContext({baseURL:origin});await context.route('**/live/config.js',route=>route.fulfill({contentType:'text/javascript',body:"export const API_BASE='http://127.0.0.1:8787';"}));const page=await context.newPage();await page.goto(`/?online=1&role=${role}`);return{context,page};}
@@ -146,4 +147,39 @@ test('finished students and teacher can switch watched games without changing re
   await expect(students[0].page.locator('.live-result')).toContainText('내 누적 승점 1점');await students[0].page.getByRole('button',{name:'관전 나가기',exact:true}).click();await expect(students[0].page.locator('#liveWatchTitle')).toHaveCount(0);await expect(students[0].page.locator('#liveTurn')).toHaveText('경기 종료');
   await teacher.page.locator('.live-match-row').filter({hasText:'진행 중'}).getByRole('button',{name:/관전하기/}).first().click();await expect(teacher.page.locator('#liveWatchTitle')).toBeVisible();await expect(teacher.page.locator('#liveBoard .intersection:enabled')).toHaveCount(0);await teacher.page.screenshot({path:'test-results/spectator-teacher.png',fullPage:true});await teacher.page.locator('.live-roster-details summary').click();await expect(teacher.page.getByRole('button',{name:'전환학생0 관리',exact:true})).toBeVisible();
  }finally{await cleanup(teacher,...students);}
+});
+
+
+test('teacher QR decodes to a clean student invitation and stays usable during live updates',async({browser})=>{
+  const {teacher,code}=await room(browser);let student;
+  try{
+    await teacher.context.grantPermissions(['clipboard-read','clipboard-write']);
+    await teacher.page.getByRole('button',{name:'학생 입장 QR코드 크게 보기',exact:true}).click();
+    await expect(teacher.page.locator('#lobbyDialog')).toBeVisible();
+    const rgba=await teacher.page.locator('.live-qr-large svg').evaluate(async svg=>{
+      const source=svg.cloneNode(true);source.setAttribute('width','320');source.setAttribute('height','320');
+      const img=new Image();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(source));await img.decode();
+      const canvas=document.createElement('canvas');canvas.width=canvas.height=320;
+      const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,320,320);ctx.drawImage(img,0,0,320,320);
+      return Array.from(ctx.getImageData(0,0,320,320).data);
+    });
+    const decoded=jsQR(new Uint8ClampedArray(rgba),320,320);expect(decoded).not.toBeNull();
+    const url=new URL(decoded.data);expect(url.origin).toBe(origin);expect(url.pathname).toBe('/');
+    expect([...url.searchParams]).toEqual([['online','1'],['role','student'],['code',code]]);
+    await teacher.page.locator('#liveQrCopy').click();await expect(teacher.page.locator('#liveQrNotice')).toHaveText('학생 입장 링크를 복사했어요.');
+    expect(await teacher.page.evaluate(()=>navigator.clipboard.readText())).toBe(decoded.data);
+    await teacher.page.screenshot({path:'test-results/teacher-qr-large.png',fullPage:true});
+    student=await pageFor(browser,'student');await student.page.goto(decoded.data);
+    await expect(student.page.locator('#liveCode')).toHaveValue(code);
+    await student.page.locator('#liveNickname').fill('큐알학생');await student.page.getByRole('button',{name:'실제 방 참가하기'}).click();
+    await expect(student.page.locator('#onlineTitle')).toContainText('큐알학생');
+    await expect(student.page.locator('[data-live=qr]')).toHaveCount(0);await expect(student.page.locator('.preview-banner')).toHaveCount(0);
+    await expect(teacher.page.locator('#lobbyDialog')).toBeVisible();await expect(teacher.page.locator('#liveTeacherRoster')).toContainText('큐알학생');
+    await teacher.page.setViewportSize({width:390,height:844});
+    const box=await teacher.page.locator('#lobbyDialog').boundingBox();expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(390);expect(box.y).toBeGreaterThanOrEqual(0);expect(box.y+box.height).toBeLessThanOrEqual(844);
+    await teacher.page.screenshot({path:'test-results/teacher-qr-mobile.png',fullPage:true});
+    await teacher.page.keyboard.press('Escape');await expect(teacher.page.locator('#lobbyDialog')).toBeHidden();
+    await teacher.page.getByRole('button',{name:'학생 입장 QR코드 크게 보기',exact:true}).click();await teacher.page.locator('#liveDialogClose').click();await expect(teacher.page.locator('#lobbyDialog')).toBeHidden();
+    await teacher.page.getByRole('button',{name:'큐알학생 관리',exact:true}).click();await expect(teacher.page.locator('#lobbyDialog')).not.toHaveClass(/live-qr-dialog/);
+  }finally{await cleanup(teacher,...(student?[student]:[]));}
 });

@@ -10,12 +10,15 @@
     "dev:server": "wrangler dev --config server/wrangler.jsonc --ip 127.0.0.1 --port 8787 --var ALLOWED_ORIGINS:http://127.0.0.1:8080",
     "test:server": "npm run build:server && node --test tests/server/*.test.js",
     "deploy:server": "wrangler deploy --config server/wrangler.jsonc",
-    "configure:online": "node scripts/configure-online.mjs"
+    "configure:online": "node scripts/configure-online.mjs",
+    "build:qr": "node scripts/build-qr.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
     "esbuild": "^0.28.2",
+    "jsqr": "1.4.0",
     "miniflare": "^4.20260730.0",
+    "qrcode-generator": "2.0.4",
     "wrangler": "^4.160.1"
   }
 }
