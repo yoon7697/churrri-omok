@@ -8,7 +8,8 @@ body.online-mode .top-actions .pill{white-space:nowrap}
 .preview-tag{flex-shrink:0;background:#fff;border:1px solid #bcd3fa;border-radius:8px;padding:4px 9px;font-weight:850;font-size:12px}
 .preview-banner p{margin:0;line-height:1.6;word-break:keep-all}
 .online-topline{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:24px}
-.lobby-back{padding:4px 0;background:none;border:0;font-size:14px;color:#635a69;font-weight:750;min-height:36px}
+.lobby-back{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:10px 16px;background:#e8f2ff;border:2px solid #9ab9e3;border-radius:13px;font-size:14px;color:#234d82;font-weight:850;min-height:44px;box-shadow:0 3px 0 #cbdcf0;transition:background .15s,box-shadow .15s}
+.lobby-back:hover{background:#dbeaff;border-color:#628fc9}.lobby-back:active{box-shadow:0 1px 0 #cbdcf0}.lobby-back:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .lobby-stage{font-size:12px;color:#817987}
 .lobby-heading{margin:16px 0 28px}
 .lobby-heading .eyebrow{font-size:12px;letter-spacing:2px;margin:0 0 10px}

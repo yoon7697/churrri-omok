@@ -142,7 +142,6 @@ root.addEventListener('click',async event=>{
 if(base&&!params.has('demo')){
   document.getElementById('createOnlineRoom').addEventListener('click',event=>{event.stopImmediatePropagation();location.href='?online=1&role=teacher';},true);
   document.getElementById('joinOnlineRoom').addEventListener('click',event=>{event.stopImmediatePropagation();location.href=`?online=1&role=student&code=${encodeURIComponent(document.getElementById('joinCode').value.trim())}`;},true);
-  document.querySelector('#createOnlineRoom span').textContent='온라인 대회';
 }
 if(params.get('online')==='1'){
   document.addEventListener('omok:home',()=>{if(!transitioning&&!practicing){connection?.stop();document.body.classList.remove('live-playing');history.replaceState(null,'',location.pathname);}});

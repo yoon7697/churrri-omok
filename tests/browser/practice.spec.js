@@ -9,7 +9,10 @@ async function ready(page){await expect(page.locator('#turnText')).toContainText
 
 test('defaults, all difficulties and both colors use real module workers',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/');await page.locator('#startPractice').click();
+  await page.goto('/');await page.screenshot({path:'test-results/home-design.png',fullPage:true});
+  await page.locator('[data-dialog=rules]').click();await page.screenshot({path:'test-results/rules-design.png',fullPage:true});await page.locator('#okDialog').click();
+  await page.locator('[data-dialog=help]').click();await page.screenshot({path:'test-results/help-design.png',fullPage:true});await page.locator('#okDialog').click();
+  await page.locator('#startPractice').click();
   await expect(page.locator('input[value="normal"]')).toBeChecked();await expect(page.locator('input[name="color"][value="1"]')).toBeChecked();
   for(const level of ['easy','normal','hard'])for(const color of ['1','2']){
     let workerSeen=false;page.once('worker',()=>workerSeen=true);
