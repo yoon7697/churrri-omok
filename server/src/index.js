@@ -25,7 +25,7 @@ export default {
       const registry = env.REGISTRY.get(env.REGISTRY.idFromName('codes-v1'));
       if (request.method === 'POST' && ['/rooms', '/join'].includes(url.pathname)) {
         const ip = request.headers.get('CF-Connecting-IP') || 'local';
-        const rate = await registry.fetch(new Request('https://internal/rate', { method: 'POST', body: JSON.stringify({ key: await hash(`${url.pathname}:${ip}`), limit: url.pathname === '/rooms' ? 10 : 40 }) }));
+        const rate = await registry.fetch(new Request('https://internal/rate', { method: 'POST', body: JSON.stringify({ key: await hash(`${url.pathname}:${ip}`), limit: url.pathname === '/rooms' ? 10 : 120 }) }));
         if (!rate.ok) return cors(rate, request);
         const data = await body(request);
         if (url.pathname === '/rooms') return cors(await registry.fetch(new Request('https://internal/create', { method: 'POST', body: JSON.stringify(data) })), request);
@@ -36,7 +36,7 @@ export default {
       }
       const route = url.pathname.match(/^\/rooms\/([a-f0-9-]{36})\/(state|ticket|ws)$/);
       if (route && ((route[2] === 'ticket' && request.method === 'POST') || (route[2] !== 'ticket' && request.method === 'GET'))) {
-        const rate=await registry.fetch(new Request('https://internal/rate',{method:'POST',body:JSON.stringify({key:await hash(`connect:${request.headers.get('CF-Connecting-IP')||'local'}`),limit:120})}));
+        const rate=await registry.fetch(new Request('https://internal/rate',{method:'POST',body:JSON.stringify({key:await hash(`connect:${request.headers.get('CF-Connecting-IP')||'local'}`),limit:600})}));
         if(!rate.ok)return cors(rate,request);
         return cors(await env.ROOMS.get(env.ROOMS.idFromName(route[1])).fetch(new Request(request)), request);
       }

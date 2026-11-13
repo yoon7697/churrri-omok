@@ -12,9 +12,10 @@ const options={modules:true,scriptPath:new URL('../../server/dist/worker.mjs',im
   bindings:{ALLOWED_ORIGINS:origin}};
 let mf=new Miniflare(options);
 const sockets=[];
+let testIp=0;test.beforeEach(()=>{testIp++;});
 test.after(async()=>{for(const ws of sockets)try{ws.close();}catch{}await mf.dispose();await rm(directory,{recursive:true,force:true});});
 async function request(path,data,token,extra={}){
-  const res=await mf.dispatchFetch('https://backend.test'+path,{method:data===undefined?'GET':'POST',headers:{Origin:origin,...(token?{Authorization:`Bearer ${token}`}:{}) ,...extra},body:data===undefined?undefined:JSON.stringify(data)});
+  const res=await mf.dispatchFetch('https://backend.test'+path,{method:data===undefined?'GET':'POST',headers:{Origin:origin,'CF-Connecting-IP':`192.0.2.${testIp}`,...(token?{Authorization:`Bearer ${token}`}:{}) ,...extra},body:data===undefined?undefined:JSON.stringify(data)});
   return {status:res.status,data:await res.json()};
 }
 async function setup(){const token=newToken();const created=await request('/rooms',{token,rounds:3});assert.equal(created.status,201);return {...created.data,token};}
@@ -46,7 +47,7 @@ test('create and join retries are idempotent; ticket is single-use; old socket r
 });
 test('real sockets coordinate play, hide names, reject privilege escalation and deduplicate a move',async()=>{
   const t=await setup(),a=await student(t,'비밀고래'),b=await student(t,'비밀토끼');
-  assert.equal((await request('/join',{code:t.code,nickname:'세번째',token:newToken()})).status,409);
+  assert.equal((await request('/join',{code:t.code,nickname:'세번째',token:newToken()})).status,201);
   const tw=await socket(t),aw=await socket(a),bw=await socket(b);
   await tw.wait(e=>e.state?.onlineCount===2);
   const forbidden=aw.send('start');await aw.wait(e=>e.requestId===forbidden&&e.type==='error');
@@ -78,4 +79,42 @@ test('durable state survives full runtime restart and participants reclaim the s
   const restored=await request(`/rooms/${a.roomId}/state`,undefined,a.token);
   assert.equal(restored.status,200);assert.equal(restored.data.match.id,before.match.id);assert.equal(restored.data.match.board[7][7],1);assert.equal(restored.data.match.ply,1);assert.equal(restored.data.match.deadlineAt,before.match.deadlineAt);
   const back=await socket(a);assert.equal((await back.wait(e=>e.state?.match?.ply===1)).state.me.id,restored.data.me.id);
+});
+
+test('six students have independent real sockets and cannot act in another game',async()=>{
+ const t=await setup(),people=[];for(let i=0;i<6;i++)people.push(await student(t,`여럿친구${i}`));
+ const tw=await socket(t),ws=[];for(const p of people)ws.push(await socket(p));await tw.wait(e=>e.state?.onlineCount===6);tw.send('start');
+ const snapshots=await Promise.all(ws.map(w=>w.wait(e=>e.state?.phase==='playing'))),states=snapshots.map(e=>e.state);
+ assert.equal(new Set(states.map(s=>s.match.id)).size,3);
+ for(let i=0;i<states.length;i++){assert.equal(states[i].participants,undefined);assert.equal(states[i].matches.length,3);for(let j=0;j<people.length;j++)if(i!==j)assert.equal(JSON.stringify(states[i]).includes(`여럿친구${j}`),false);}
+ const first=states[0].match.id,blackIndex=states.findIndex(s=>s.match.id===first&&s.match.myColor===1),otherIndex=states.findIndex(s=>s.match.id!==first),opponentIndex=states.findIndex((s,i)=>s.match.id===first&&i!==blackIndex);
+ const denied=ws[otherIndex].send('move',{matchId:first,ply:0,r:7,c:7});await ws[otherIndex].wait(e=>e.requestId===denied&&e.type==='error');
+ ws[blackIndex].send('move',{matchId:first,ply:0,r:7,c:7});await ws[opponentIndex].wait(e=>e.state?.match?.ply===1);
+ const unchanged=await request(`/rooms/${t.roomId}/state`,undefined,people[otherIndex].token);assert.equal(unchanged.data.match.ply,0);
+ tw.send('draw',{matchId:first});await ws[opponentIndex].wait(e=>e.state?.match?.status==='draw');const mid=await request(`/rooms/${t.roomId}/state`,undefined,t.token);assert.equal(mid.data.phase,'playing');assert.equal(mid.data.completed,2);
+ const tooSoon=tw.send('start');await tw.wait(e=>e.requestId===tooSoon&&e.type==='error');
+ // Terminate and rebuild the runtime with all games persisted, including a completed one.
+ for(const w of [tw,...ws])w.ws.close();await mf.dispose();mf=new Miniflare(options);
+ const restored=await request(`/rooms/${t.roomId}/state`,undefined,people[otherIndex].token);assert.equal(restored.data.match.id,states[otherIndex].match.id);assert.equal(restored.data.match.ply,0);assert.equal(restored.data.completed,2);
+ const backTeacher=await socket(t);backTeacher.send('draw');await backTeacher.wait(e=>e.state?.phase==='between');backTeacher.send('close');await backTeacher.wait(e=>e.state?.phase==='closed');
+});
+test('five students get one bye; new arrival waits for next round; full class capacity is enforced',async()=>{
+ const t=await setup(),people=[];for(let i=0;i<5;i++)people.push(await student(t,`홀수친구${i}`));
+ const tw=await socket(t),ws=[];for(const p of people)ws.push(await socket(p));await tw.wait(e=>e.state?.onlineCount===5);tw.send('start');
+ const first=(await tw.wait(e=>e.state?.phase==='playing')).state;assert.equal(first.matches.length,3);assert.equal(first.completed,1);assert.equal(first.total,5);
+ const byeIndex=(await Promise.all(people.map(p=>request(`/rooms/${t.roomId}/state`,undefined,p.token)))).findIndex(r=>r.data.bye);assert(byeIndex>=0);
+ const late=await student(t,'나중친구');const lw=await socket(late);const waiting=(await lw.wait(e=>e.type==='snapshot')).state;assert.equal(waiting.waitingForNextRound,true);assert.equal(waiting.match,undefined);
+ tw.send('draw');await tw.wait(e=>e.state?.phase==='between');tw.send('start');const second=(await tw.wait(e=>e.state?.round===2)).state;assert.equal(second.total,6);assert.equal(second.matches.filter(m=>m.status==='bye').length,0);await lw.wait(e=>e.state?.match?.status==='active');
+ tw.send('close');await tw.wait(e=>e.state?.phase==='closed');
+ const full=await setup(),classmates=[];for(let i=0;i<40;i++)classmates.push(await student(full,`정원학생${i}`));
+ const extra=await request('/join',{code:full.code,nickname:'정원초과',token:newToken()});assert.equal(extra.status,409);
+ const state=await request(`/rooms/${full.roomId}/state`,undefined,full.token);assert.equal(state.data.count,40);
+ const fullTeacher=await socket(full),classSockets=[];for(const p of classmates)classSockets.push(await socket(p));
+ await fullTeacher.wait(e=>e.state?.onlineCount===40);fullTeacher.send('start');
+ const classStates=await Promise.all(classSockets.map(w=>w.wait(e=>e.state?.phase==='playing')));
+ assert.equal(new Set(classStates.map(e=>e.state.match.id)).size,20);
+ assert(classStates.every(e=>e.state.total===40&&e.state.matches.length===20));
+ for(let i=0;i<classStates.length;i++)if(classStates[i].state.match.myColor===1)classSockets[i].send('move',{matchId:classStates[i].state.match.id,ply:0,r:7,c:7});
+ await Promise.all(classSockets.map(w=>w.wait(e=>e.state?.match?.ply===1)));
+ fullTeacher.send('close');await fullTeacher.wait(e=>e.state?.phase==='closed');
 });

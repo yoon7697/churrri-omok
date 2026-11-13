@@ -30,3 +30,13 @@ body.live-playing #liveError:empty{display:none}
 
 .live-my-color{font-size:13px;color:#817987;white-space:nowrap}
 @media(max-width:750px){body.live-playing .live-room-panel{width:100%;flex:0 0 auto;min-height:0}}
+
+.live-progress h2{font-size:20px;margin:0 0 14px}.live-progress h2 small{display:block;font-size:12px;color:#817987;margin-top:5px}
+.live-room-panel .live-progress{margin-top:22px}.live-match-list{display:grid;gap:10px}
+.live-match-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:13px;border:1px solid #e5e8f0;border-radius:14px;background:#fffdf8}
+.live-match-row>div{flex:1;min-width:100px}.live-match-row strong{font-size:14px}.live-match-row p{font-size:12px;line-height:1.5;color:#817987;margin:5px 0 0;overflow-wrap:anywhere}
+.live-match-row.is-mine{border-color:var(--blue);background:#f0f5ff}.live-match-status{font-size:12px;color:#475975}
+.live-match-row .lobby-text-button{font-size:12px;padding:8px;min-height:40px}
+.live-wait-notice{padding:14px;background:#eff4ff;border-radius:14px;font-size:14px;line-height:1.8}
+.live-standings{margin-top:24px;background:#fffdf8;border-radius:20px;padding:24px}.live-standings h2{font-size:22px;margin-top:0}.live-standings table{border-collapse:collapse;width:100%;text-align:left}.live-standings th,.live-standings td{padding:12px;border-bottom:1px solid #e5e8f0;overflow-wrap:anywhere}
+@media(max-width:750px){.live-match-row{padding:10px}.live-standings{padding:16px}.live-standings th,.live-standings td{padding:10px 6px}}

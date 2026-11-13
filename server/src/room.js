@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
-import { newRoom, nickname, command, expire, view, fail } from './model.js';
+import { newRoom, nickname, command, expire, view, fail, MAX_STUDENTS } from './model.js';
 import { body, json, secret, hash, errorResponse } from './util.js';
 
 export class Room extends DurableObject {
@@ -23,8 +23,8 @@ export class Room extends DurableObject {
     }))];
   }
   async persist(next) {
-    const match = next.matches.at(-1);
-    const deadline = match?.status === 'active' ? Math.min(match.deadlineAt, next.expiresAt) : (next.phase === 'closed' ? next.purgeAt : next.expiresAt);
+    const deadlines = next.matches.filter(m => m.status === 'active').map(m => m.deadlineAt);
+    const deadline = next.phase === 'closed' ? next.purgeAt : Math.min(next.expiresAt, ...deadlines);
     await this.ctx.storage.transaction(async tx => { await tx.put('room', next); await tx.setAlarm(Math.max(Date.now() + 1, deadline)); });
     this.room = next;
   }
@@ -60,7 +60,7 @@ export class Room extends DurableObject {
           const previous = this.room.participants.find(p => p.hash === digest);
           if (previous) { if (previous.removed) fail('대기실에서 내보내졌어요.',403); return json({ roomId:this.room.id, role:'student' }); }
           if (this.room.teacher.hash === digest) fail('학생 참가 자격을 다시 만들어 주세요.');
-          if (this.room.participants.filter(p => !p.removed).length >= 2 || this.room.participants.length >= 40) fail('이번 연결 검증 방은 학생 두 명까지 참가할 수 있어요.', 409);
+          if (this.room.participants.filter(p => !p.removed).length >= MAX_STUDENTS || this.room.participants.length >= 80) fail('방 정원은 학생 40명이에요. 참가 기록이 가득 차면 새 방을 만들어 주세요.', 409);
           if (this.room.participants.some(p => !p.removed && p.nickname === name)) fail('같은 닉네임이 있어요.',409);
           const id = crypto.randomUUID(), next = structuredClone(this.room);
           next.participants.push({ id, hash: digest, nickname: name, epoch: 0, points: 0, black: 0, games: 0, removed: false }); next.version++;
