@@ -59,6 +59,7 @@ export class Room extends DurableObject {
           const digest = await hash(data.token);
           const previous = this.room.participants.find(p => p.hash === digest);
           if (previous) { if (previous.removed) fail('대기실에서 내보내졌어요.',403); return json({ roomId:this.room.id, role:'student' }); }
+          if (this.room.phase === 'finished') fail('이미 대회가 끝났어요. 선생님에게 새 방 코드를 확인해 주세요.', 409);
           if (this.room.teacher.hash === digest) fail('학생 참가 자격을 다시 만들어 주세요.');
           if (this.room.participants.filter(p => !p.removed).length >= MAX_STUDENTS || this.room.participants.length >= 80) fail('방 정원은 학생 40명이에요. 참가 기록이 가득 차면 새 방을 만들어 주세요.', 409);
           if (this.room.participants.some(p => !p.removed && p.nickname === name)) fail('같은 닉네임이 있어요.',409);

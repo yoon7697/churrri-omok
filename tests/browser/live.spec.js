@@ -71,6 +71,8 @@ test('five students play two games with a bye, private lists and teacher-control
     await teacher.page.screenshot({path:'test-results/multi-teacher-progress.png',fullPage:true});
     await other[0].page.setViewportSize({width:390,height:844});const board=await other[0].page.locator('#liveBoard').boundingBox();expect(board.x+board.width).toBeLessThanOrEqual(390);expect(board.y+board.height).toBeLessThanOrEqual(844);
     await other[0].page.screenshot({path:'test-results/multi-student-mobile.png',fullPage:true});
+    await other[0].page.setViewportSize({width:1024,height:768});const tablet=await other[0].page.locator('#liveBoard').boundingBox();expect(tablet.x+tablet.width).toBeLessThanOrEqual(1024);expect(tablet.y+tablet.height).toBeLessThanOrEqual(768);
+    await other[0].page.screenshot({path:'test-results/multi-student-tablet.png',fullPage:true});
     await teacher.page.getByRole('button',{name:/^경기 [0-9]+ 무승부 종료$/}).click();await teacher.page.locator('#liveConfirm').click();await expect(teacher.page.locator('#liveStart')).toBeEnabled();
     await teacher.page.locator('#liveStart').click();await expect(students[firstBye].page.locator('#liveBoard')).toBeVisible();await expect(students[firstBye].page.locator('.live-result')).toHaveCount(0);
   }finally{await cleanup(teacher,...students);}

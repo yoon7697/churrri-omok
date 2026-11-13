@@ -54,7 +54,7 @@ function render(){
   if(!state){shell(heading(fatal?'연결을 확인해 주세요':'대기실에 연결하고 있어요',fatal||'잠시만 기다려 주세요.')+(fatal?'<button class="lobby-secondary" data-live="retry" type="button">이 탭에서 다시 연결</button><button class="lobby-text-button" data-live="forget" type="button">새로 참가하기</button>':''));return;}
   const match=state.match,active=match?.status==='active',playing=state.phase==='playing';
   const me=state.me;document.body.classList.toggle('live-playing',role==='student'&&active);
-  const title=role==='teacher'?'우리 반 온라인 대회':active?'상대와 대결하고 있어요':state.bye?'이번 라운드는 부전승이에요!':state.waitingForNextRound?'다음 라운드를 기다려 주세요':match?`${e(me?.nickname)} 님, 경기를 마쳤어요!`:`${e(me?.nickname)} 님, 준비됐어요!`;
+  const title=role==='teacher'?'우리 반 온라인 대회':state.phase==='finished'?'우리 반 대회가 끝났어요!':active?'상대와 대결하고 있어요':state.bye?'이번 라운드는 부전승이에요!':state.waitingForNextRound?'다음 라운드를 기다려 주세요':match?`${e(me?.nickname)} 님, 경기를 마쳤어요!`:`${e(me?.nickname)} 님, 준비됐어요!`;
   shell(heading(title,`${state.round} / ${state.rounds}라운드 · 한 판 최대 5분 · 경기 종료 ${state.completed} / ${state.total}명`)+
     (state.phase==='closed'?'<section class="lobby-card"><h2>방이 닫혔어요.</h2><p>선생님에게 새 방 코드를 확인해 주세요.</p></section>':
     `<div class="live-layout"><section class="lobby-card live-room-panel"><span class="side-kicker">방 코드 · ${state.count} / ${state.capacity||40}명</span><strong class="room-code" id="liveRoomCode">${state.code}</strong><button class="lobby-secondary" data-live="copy" type="button">학생 입장 링크 복사</button><p class="field-hint">접속 중 ${state.onlineCount}명 · 같은 승점끼리 우선 대결해요.</p>${role==='teacher'||!playing?roster():active?'<p>상대방: 익명 참가자</p>':''}

@@ -83,3 +83,8 @@ test('40 students and randomized smaller fields never duplicate or omit an eligi
  command(r,'teacher','start',{},ids(r),1000,random);const all=current(r).flatMap(m=>m.players);assert.equal(all.length,n);assert.equal(new Set(all).size,n);assert.equal(current(r).filter(m=>m.status==='bye').length,n%2);command(r,'teacher','draw',{},ids(r),1001);
  }}
 });
+
+test('an offline student excluded from the final round sees final standings, never a nonexistent next round',()=>{
+ const r=fixture(5,3);for(let i=0;i<3;i++){start(r,ids(r).slice(0,4));command(r,'teacher','draw',{},ids(r),1001);}
+ const s=view(r,'p4',ids(r),1002);assert.equal(s.phase,'finished');assert.equal(s.waitingForNextRound,false);assert.equal(s.match,undefined);assert.equal(s.standings.length,5);assert.equal(s.standings.at(-1).rank,5);
+});

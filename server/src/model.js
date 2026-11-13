@@ -159,7 +159,7 @@ export function view(room, actorId, onlineIds, now) {
       mine: m.players.includes(actorId), deadlineAt: m.deadlineAt,
       names: m.status !== 'active' || teacher ? m.players.map(id => m.names?.[id] || room.participants.find(p => p.id === id)?.nickname || '참가자') : undefined,
       connected: m.players.filter(id => onlineIds.includes(id)).length })),
-    waitingForNextRound: !teacher && room.round > 0 && !match };
+    waitingForNextRound: !teacher && room.round > 0 && !match && !['finished', 'closed'].includes(room.phase) };
   if (match) {
     if (match.status === 'bye') out.bye = true;
     else out.match = matchView(room, match, actorId, onlineIds);
