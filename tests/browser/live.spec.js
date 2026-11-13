@@ -3,7 +3,7 @@ import jsQR from 'jsqr';
 test.skip(!process.env.LIVE_TEST_SERVER,'Requires the real local Cloudflare runtime.');
 const origin='http://127.0.0.1:8080';
 async function pageFor(browser,role){const context=await browser.newContext({baseURL:origin});await context.route('**/live/config.js',route=>route.fulfill({contentType:'text/javascript',body:"export const API_BASE='http://127.0.0.1:8787';"}));const page=await context.newPage();await page.goto(`/?online=1&role=${role}`);return{context,page};}
-async function room(browser){const teacher=await pageFor(browser,'teacher');await teacher.page.getByRole('button',{name:'실제 방 만들기',exact:true}).click();await expect(teacher.page.locator('#liveRoomCode')).toHaveText(/^\d{4}$/);const code=await teacher.page.locator('#liveRoomCode').innerText();return{teacher,code};}
+async function room(browser,ip){const teacher=await pageFor(browser,'teacher');if(ip)await teacher.context.route('http://127.0.0.1:8787/rooms',route=>route.continue({headers:{...route.request().headers(),'CF-Connecting-IP':ip}}));await teacher.page.getByRole('button',{name:'실제 방 만들기',exact:true}).click();await expect(teacher.page.locator('#liveRoomCode')).toHaveText(/^\d{4}$/);const code=await teacher.page.locator('#liveRoomCode').innerText();return{teacher,code};}
 async function join(browser,code,name){const student=await pageFor(browser,'student');await student.page.locator('#liveCode').fill(code);await student.page.locator('#liveNickname').fill(name);await student.page.getByRole('button',{name:'실제 방 참가하기'}).click();await expect(student.page.locator('#liveEntryForm')).toHaveCount(0);await expect(student.page.locator('#liveConnection')).toHaveText('● 연결됨');return student;}
 async function cleanup(...users){for(const u of users)await u.context.close();}
 const point=(p,r,c)=>p.locator('#liveBoard .intersection').nth(r*15+c);
@@ -182,7 +182,8 @@ test('teacher QR decodes to a clean student invitation and stays usable during l
     await teacher.page.keyboard.press('Escape');await expect(teacher.page.locator('#lobbyDialog')).toBeHidden();
     await teacher.page.getByRole('button',{name:'학생 입장 QR코드 크게 보기',exact:true}).click();await teacher.page.locator('#liveDialogClose').click();await expect(teacher.page.locator('#lobbyDialog')).toBeHidden();
     await teacher.page.getByRole('button',{name:'큐알학생 관리',exact:true}).click();await expect(teacher.page.locator('#lobbyDialog')).not.toHaveClass(/live-qr-dialog/);
-    const next=await room(browser);nextTeacher=next.teacher;
+    // Simulate a second school's teacher, rather than exceeding the shared test IP's 10 rooms/minute limit.
+    const next=await room(browser,'192.0.2.254');nextTeacher=next.teacher;
     const nextURL=new URL(decoded.data);nextURL.searchParams.set('code',next.code);
     await student.page.goto(nextURL.href);await expect(student.page.locator('#liveCode')).toHaveValue(next.code);
     await student.page.locator('#liveNickname').fill('새큐알학생');await student.page.getByRole('button',{name:'실제 방 참가하기'}).click();
