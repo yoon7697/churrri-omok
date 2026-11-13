@@ -1,5 +1,5 @@
 import { json, body, errorResponse, hash } from './util.js';
-import { fail } from './model.js';
+import { fail, MAX_STUDENTS } from './model.js';
 export { Room } from './room.js';
 export { Registry } from './registry.js';
 function allowed(request, env) {
@@ -19,7 +19,7 @@ export default {
   async fetch(request, env) {
     try {
       const url = new URL(request.url);
-      if (url.pathname === '/health' && request.method === 'GET') return json({ ok: true, stage: 'two-player-online' });
+      if (url.pathname === '/health' && request.method === 'GET') return json({ ok: true, stage: 'classroom-online', capacity: MAX_STUDENTS });
       if (!allowed(request, env)) fail('허용되지 않은 접속 주소예요.', 403);
       if (request.method === 'OPTIONS') return cors(new Response(null, { status: 204 }), request);
       const registry = env.REGISTRY.get(env.REGISTRY.idFromName('codes-v1'));

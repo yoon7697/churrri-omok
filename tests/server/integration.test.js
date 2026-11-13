@@ -30,6 +30,7 @@ async function socket(person){
 }
 
 test('origin checks, input size, missing auth and private init routes',async()=>{
+  const health=await mf.dispatchFetch('https://backend.test/health');assert.deepEqual(await health.json(),{ok:true,stage:'classroom-online',capacity:40});
   assert.equal((await request('/rooms',{token:newToken(),rounds:3},null,{Origin:'https://untrusted.example'})).status,403);
   assert.equal((await request('/rooms',{token:newToken(),rounds:4})).status,400);
   assert.equal((await request('/rooms',{token:newToken(),rounds:3,padding:'x'.repeat(5000)})).status,413);
