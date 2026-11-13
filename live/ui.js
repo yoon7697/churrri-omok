@@ -116,7 +116,7 @@ root.addEventListener('click',async event=>{
     });return;
   }
   if(a==='practice'){
-    practicing=true;root.classList.add('hidden');document.body.classList.remove('online-mode');
+    practicing=true;root.classList.add('hidden');document.body.classList.remove('online-mode','live-playing');
     openPracticeFromLobby(()=>{practicing=false;render();});
   }
 });
