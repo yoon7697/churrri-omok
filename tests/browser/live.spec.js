@@ -58,7 +58,7 @@ test('five students play two games with a bye, private lists and teacher-control
       if(await p.locator('.live-result').count()){await expect(p.locator('.live-result')).toContainText('부전승');firstBye=i;continue;}
       const id=await p.locator('.live-match-row.is-mine').getAttribute('data-match');if(!groups.has(id))groups.set(id,[]);groups.get(id).push(students[i]);
       await expect(p.locator('#liveBoard')).toBeVisible();await expect(p.locator('.live-my-color')).toHaveCount(1);
-      await expect(p.locator('.board-caption')).toHaveText('마지막 수는 빨간색으로 표시돼요.');
+      await expect(p.locator('#onlineSection .board-caption')).toHaveText('마지막 수는 빨간색으로 표시돼요.');
       for(let j=0;j<students.length;j++)await expect(p.locator('.live-match-row').filter({hasText:'진행 중'})).not.toContainText([`동시학생${j}`]);
     }
     expect(firstBye).toBeGreaterThanOrEqual(0);expect(groups.size).toBe(2);
