@@ -35,6 +35,8 @@ function attach(){
   connection=new Connection(base,session,{
     status(value){status=value;if(!practicing)render();},
     state(value){
+      // Vercel and Worker deploy independently; accept the previous two-player snapshot during rollout.
+      if(!Array.isArray(value.matches))value.matches=value.match?[{...value.match,number:1,mine:role==='student',connected:value.onlineCount}]:[];
       const wasPracticing=practicing;state=value;offset=value.serverNow-Date.now();
       if(wasPracticing&&(value.match?.status==='active'||value.phase==='closed'||value.phase==='finished')){practicing=false;transitioning=true;const info=document.getElementById('infoDialog');if(info.open)info.close();showMainMenu();transitioning=false;}
       if(!practicing)render();
