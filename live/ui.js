@@ -1,4 +1,5 @@
 import { API_BASE } from './config.js';
+import { winningStones } from '../winning-line.js';
 import { studentInviteURL, inviteQrSVG } from './invite.js';
 import { api, newToken, validateBase, Connection } from './client.js';
 import { openPracticeFromLobby, showMainMenu } from '../app.js';
@@ -88,12 +89,14 @@ function render(){
 }
 function renderBoard(match,readOnly=false){
   const board=root.querySelector('#liveBoard');if(!board)return;const pos=i=>6.25+i*6.25;
+  const winning=new Set((match.status==='won'?winningStones(match.board,match.lastMove):[]).map(p=>`${p.r},${p.c}`));
+  board.closest('.live-board-panel').querySelector('.board-caption').textContent=winning.size?'붉은 돌이 승리를 만든 다섯 개의 연결이에요.':'마지막 수는 빨간색으로 표시돼요.';
   for(let i=0;i<15;i++){for(const axis of ['vertical','horizontal']){const line=document.createElement('div');line.className=`grid-line ${axis}`;line.style[axis==='vertical'?'left':'top']=`${pos(i)}%`;board.append(line);}}
   for(const r of [3,7,11])for(const c of [3,7,11]){const star=document.createElement('div');star.className='star';star.style.top=`${pos(r)}%`;star.style.left=`${pos(c)}%`;board.append(star);}
   for(let r=0;r<15;r++)for(let c=0;c<15;c++){
     const button=document.createElement('button');button.type='button';button.className='intersection';button.style.top=`${pos(r)}%`;button.style.left=`${pos(c)}%`;button.setAttribute('role','gridcell');button.setAttribute('aria-label',`${r+1}행 ${c+1}열`);
     button.disabled=readOnly||role!=='student'||match.status!=='active'||match.myColor!==match.turn||!!match.board[r][c]||busy||status!=='online'||!!fatal||Date.now()+offset>=match.deadlineAt;
-    if(match.board[r][c]){const piece=document.createElement('span');piece.className=`piece ${match.board[r][c]===1?'black':'white'}${match.lastMove?.r===r&&match.lastMove?.c===c?' last':''}`;button.append(piece);}
+    if(match.board[r][c]){const piece=document.createElement('span');piece.className=`piece ${match.board[r][c]===1?'black':'white'}${match.lastMove?.r===r&&match.lastMove?.c===c?' last':''}${winning.has(`${r},${c}`)?' winning':''}`;if(winning.has(`${r},${c}`))button.setAttribute('aria-label',button.getAttribute('aria-label')+' · 승리를 만든 돌');button.append(piece);}
     if(!readOnly)button.onclick=()=>act('move',{matchId:match.id,r,c,ply:match.ply});board.append(button);
   }
 }

@@ -3,8 +3,8 @@ import { SIZE, inBounds, isFive, isDoubleThree, isBoardFull } from './rules.js';
 const AXES = [[0, 1], [1, 0], [1, 1], [1, -1]];
 const WIN = 10_000_000;
 export const LEVELS = {
-  easy: { depth: 1, width: 6, budget: 80 },
-  normal: { depth: 2, width: 8, budget: 300 },
+  easy: { depth: 1, width: 6, budget: 80, mistakeRate: 0.65, choiceWidth: 8 },
+  normal: { depth: 1, width: 6, budget: 140, mistakeRate: 0.3, choiceWidth: 4 },
   hard: { depth: 3, width: 8, budget: 900 }
 };
 
@@ -91,10 +91,11 @@ export function chooseMove(input, player, difficulty = 'normal', options = {}) {
   if (!root.moves.length) return null;
   const clean = m => ({ r: m.r, c: m.c });
   if (root.win) return clean(root.moves[0]);
-  if (difficulty === 'easy') {
-    // Easy occasionally picks a weaker move, but never skips an immediate win/block.
+  if (config.depth === 1) {
+    // Practice levels leave room to learn between immediate wins and forced blocks.
     const rng = options.random || Math.random;
-    const index = !root.forced && rng() < 0.3 ? Math.min(root.moves.length - 1, 1 + Math.floor(rng() * 3)) : 0;
+    const choices = Math.min(root.moves.length - 1, config.choiceWidth - 1);
+    const index = !root.forced && choices > 0 && rng() < config.mistakeRate ? 1 + Math.floor(rng() * choices) : 0;
     return clean(root.moves[index]);
   }
   const timeout = Symbol('search budget');

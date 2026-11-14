@@ -21,6 +21,7 @@ test('three isolated browsers play, preserve anonymous names and restore after r
     await point(black.page,7,4+i).click();if(i<3)await expect(white.page.locator('#liveTurn')).toHaveText('내 차례');
   }
   await expect(black.page.locator('.live-result')).toContainText('내가 이겼어요');await expect(white.page.locator('.live-result')).toContainText('상대가 이겼어요');
+  for(const p of [black,white,teacher])await expect(p.page.locator('#liveBoard .piece.winning')).toHaveCount(5);
   await expect(black.page.locator('#liveRoomCode')).toHaveCount(0);await expect(black.page.locator('[data-live=copy]')).toHaveCount(0);await expect(black.page.locator('.preview-banner')).toHaveCount(0);
   await expect(black.page.locator('.live-result')).toContainText('2점');await expect(white.page.locator('.live-result')).toContainText('바다학생');await expect(white.page.locator('.live-result')).toContainText('구름학생');
   await teacher.page.screenshot({path:'test-results/live-teacher-result.png',fullPage:true});

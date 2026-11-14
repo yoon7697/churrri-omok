@@ -1,4 +1,5 @@
 import {SIZE,emptyBoard,tryMove,isDoubleThree} from './rules.js';
+import {winningStones} from './winning-line.js';
 const $=id=>document.getElementById(id);
 const boardEl=$('board');
 let board=emptyBoard();let player=1;let moves=[];let finished=false;
@@ -105,6 +106,7 @@ function showGameEvent(type, title, text){
   };
   if(type==='forbidden')makeButton('닫기',()=>{lastFocusedElement?.focus?.({preventScroll:true});},true);
   else{
+    makeButton('닫기',()=>{$('gameSection').focus({preventScroll:true});});
     makeButton('처음 화면',()=>viewHome());
     makeButton('새 게임',()=>{reset();$('gameSection').focus({preventScroll:true});},true);
   }
@@ -118,6 +120,8 @@ const modalText={
 function showDialog(title,html){$('dialogTitle').textContent=title;$('dialogContent').innerHTML=html;modal.showModal();}
 function renderBoard(){
   boardEl.replaceChildren();
+  const winning=new Set((finished?winningStones(board,moves.at(-1)):[]).map(p=>`${p.r},${p.c}`));
+  $('gameSection').querySelector('.board-caption').textContent=winning.size?'붉은 돌이 승리를 만든 다섯 개의 연결이에요.':'마지막 수는 빨간색으로 표시돼요.';
   // Centers are 6.25%, 12.5%, ... 93.75% (15 intersections).
   const pos=i=>6.25+(i*87.5/14);
   for(let i=0;i<SIZE;i++){
@@ -130,7 +134,7 @@ function renderBoard(){
     point.setAttribute('role','gridcell');point.setAttribute('aria-label',`${r+1}행 ${c+1}열: ${board[r][c]===1?'흑돌':board[r][c]===2?'백돌':'빈 자리'}`);
     point.disabled=finished||thinking||isComputerTurn()||board[r][c]!==0;
     point.addEventListener('click',()=>move(r,c));
-    if(board[r][c]){const piece=document.createElement('span');piece.className=`piece ${board[r][c]===1?'black':'white'}`;if(moves.length&&moves.at(-1).r===r&&moves.at(-1).c===c)piece.classList.add('last');point.append(piece);}
+    if(board[r][c]){const piece=document.createElement('span');piece.className=`piece ${board[r][c]===1?'black':'white'}`;if(moves.length&&moves.at(-1).r===r&&moves.at(-1).c===c)piece.classList.add('last');if(winning.has(`${r},${c}`)){piece.classList.add('winning');point.setAttribute('aria-label',point.getAttribute('aria-label')+' · 승리를 만든 돌');}point.append(piece);}
     boardEl.append(point);
   }
 }
@@ -146,7 +150,7 @@ function status(message='먼저 다섯 개를 연결하면 승리해요!'){
 }
 function move(r,c,computer=false){if(finished||(!computer&&(thinking||isComputerTurn())))return;const result=tryMove(board,r,c,player);if(!result.ok){if(result.reason.includes('3·3'))showGameEvent('forbidden','3·3은 금지예요!', '흑돌과 백돌 모두 한 번에 열린 삼을 두 개 만들 수 없어요. 다른 자리에 놓아 보세요.');else status(result.reason);return;}
   moves.push({r,c,player});
-  if(result.win){finished=true;const winner=player===1?'흑돌':'백돌';status(`${winner}이 승리했어요! 🎉`);renderBoard();showGameEvent('win',mode==='practice'?(player===human?'내가 이겼어요! 🎉':'컴퓨터가 이겼어요!'): `${winner} 승리! 🎉`,mode==='practice'?(player===human?'멋진 대결이었어요! 다시 연습해 볼까요?':'잘 도전했어요! 새 게임에서 다시 연습해 보세요.'):`${moves.length}수 만에 다섯 개를 연결했어요. 정말 잘했어요!`);return;}
+  if(result.win){finished=true;const winner=player===1?'흑돌':'백돌';status(`${winner}이 승리했어요! 🎉`);renderBoard();showGameEvent('win',mode==='practice'?(player===human?'내가 이겼어요! 🎉':'컴퓨터가 이겼어요!'): `${winner} 승리! 🎉`,mode==='practice'?(player===human?'붉게 표시된 다섯 개를 연결해서 이겼어요. 닫기를 눌러 판을 확인해 보세요.':'컴퓨터가 붉게 표시된 다섯 개를 연결했어요. 닫은 뒤 무르기로 다시 도전해 보세요.'):`${moves.length}수 만에 다섯 개를 연결했어요. 닫기를 눌러 붉게 표시된 돌을 확인해 보세요.`);return;}
   if(result.draw){finished=true;status('무승부! 놓을 곳이 더는 없어요.');renderBoard();showGameEvent('draw','무승부예요!','바둑판이 모두 찼어요. 새 게임을 시작하거나 처음 화면으로 돌아갈 수 있어요.');return;}
   player=player===1?2:1;renderBoard();status();scheduleComputer();
 }
@@ -164,6 +168,7 @@ $('resetButton').addEventListener('click',reset);
 $('undoButton').addEventListener('click',()=>{
   if($('undoButton').disabled)return;
   cancelComputer();
+  if(eventModal.open)eventModal.close();
   do{const last=moves.pop();if(!last)break;board[last.r][last.c]=0;player=last.player;}while(mode==='practice'&&player!==human&&moves.length);
   finished=false;renderBoard();status('마지막 수를 취소했어요.');
 });
@@ -171,7 +176,6 @@ document.querySelectorAll('[data-dialog]').forEach(btn=>btn.addEventListener('cl
 document.querySelectorAll('[data-unavailable]').forEach(btn=>btn.addEventListener('click',()=>showDialog('다음 버전에서 만나요!',`<p><b>${btn.dataset.unavailable}</b> 기능은 아직 개발 중이에요.</p><p>지금은 <b>컴퓨터 연습</b>과 한 기기에서 하는 <b>1:1 대결</b>을 즐길 수 있어요.</p>`)));
 $('closeDialog').addEventListener('click',()=>modal.close());$('okDialog').addEventListener('click',()=>modal.close());
 modal.addEventListener('click',e=>{if(e.target===modal)modal.close();});
-// Result dialogs must be dismissed through their own visible actions.
-eventModal.addEventListener('cancel',e=>e.preventDefault());
+// Closing a result leaves the final board available for review and practice undo.
 eventModal.addEventListener('click',e=>{if(e.target===eventModal)e.preventDefault();});
 reset();

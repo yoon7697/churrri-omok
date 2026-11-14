@@ -47,7 +47,9 @@ test('local forbidden popup preserves turn; local winner, reset and home',async(
   await expect(page.locator('.piece')).toHaveCount(8);await page.getByRole('button',{name:'닫기',exact:true}).click();await expect(page.locator('#turnText')).toHaveText('흑돌 차례');
   await page.locator('#resetButton').click();
   for(const [r,c] of [[7,3],[0,0],[7,4],[0,2],[7,5],[0,4],[7,6],[0,6],[7,7]])await point(page,r,c).click();
-  await expect(page.locator('#gameEventTitle')).toContainText('흑돌 승리');await expect(page.locator('.intersection:enabled')).toHaveCount(0);
+  await expect(page.locator('#gameEventTitle')).toContainText('흑돌 승리');await expect(page.locator('.intersection:enabled')).toHaveCount(0);await expect(page.locator('.piece.winning')).toHaveCount(5);
+  await page.locator('#gameEventActions').getByRole('button',{name:'닫기',exact:true}).click();await expect(page.locator('#gameEventDialog')).toBeHidden();await expect(page.locator('.piece.winning')).toHaveCount(5);await page.screenshot({path:'test-results/local-winning-stones.png',fullPage:true});
+  await page.locator('#undoButton').click();await expect(page.locator('.piece.winning')).toHaveCount(0);await point(page,7,7).click();
   await page.locator('#gameEventActions').getByRole('button',{name:'새 게임',exact:true}).click();await expect(page.locator('.piece')).toHaveCount(0);
   await page.locator('#backHome').click();await expect(page.locator('#landing')).toBeVisible();
 });
@@ -60,17 +62,22 @@ async function scriptedPractice(page,computerMoves,color='1'){
   await practice(page,'normal',color);if(color==='2')await ready(page);
 }
 
-test('practice human victory popup restarts same settings',async({page})=>{
+test('practice human victory can close, undo, resume and restart same settings',async({page})=>{
   await scriptedPractice(page,[{r:0,c:0},{r:0,c:2},{r:0,c:4},{r:0,c:6}]);
   for(const c of [3,4,5,6]){await point(page,7,c).click();await ready(page);}
+  await point(page,7,7).click();await expect(page.locator('#gameEventTitle')).toContainText('내가 이겼어요');await expect(page.locator('.piece.winning')).toHaveCount(5);
+  await page.keyboard.press('Escape');await expect(page.locator('#gameEventDialog')).toBeHidden();await page.locator('#undoButton').click();await expect(page.locator('.piece')).toHaveCount(8);await expect(page.locator('.piece.winning')).toHaveCount(0);await expect(page.locator('#turnText')).toContainText('내 차례');
   await point(page,7,7).click();await expect(page.locator('#gameEventTitle')).toContainText('내가 이겼어요');
   await page.locator('#gameEventActions').getByRole('button',{name:'새 게임'}).click();await expect(page.locator('.piece')).toHaveCount(0);await expect(page.locator('#gameTitle')).toHaveText('컴퓨터와 오목 연습');
 });
 
 test('practice computer victory popup returns home',async({page})=>{
-  await scriptedPractice(page,[3,4,5,6,7].map(c=>({r:7,c})),'2');
+  await scriptedPractice(page,[...[3,4,5,6,7].map(c=>({r:7,c})),{r:0,c:10}],'2');
   for(const c of [0,2,4,6]){await point(page,0,c).click();if(c!==6)await ready(page);}
-  await expect(page.locator('#gameEventTitle')).toContainText('컴퓨터가 이겼어요');await page.locator('#gameEventActions').getByRole('button',{name:'처음 화면'}).click();await expect(page.locator('#landing')).toBeVisible();
+  await expect(page.locator('#gameEventTitle')).toContainText('컴퓨터가 이겼어요');await expect(page.locator('.piece.winning')).toHaveCount(5);
+  await page.screenshot({path:'test-results/practice-result-close.png',fullPage:true});await page.locator('#gameEventActions').getByRole('button',{name:'닫기',exact:true}).click();await expect(page.locator('#undoButton')).toBeEnabled();
+  await page.locator('#undoButton').click();await expect(page.locator('.piece')).toHaveCount(7);await expect(page.locator('.piece.winning')).toHaveCount(0);await expect(page.locator('#turnText')).toContainText('내 차례');
+  await point(page,7,7).click();await ready(page);await expect(page.locator('.piece')).toHaveCount(9);await page.locator('#backHome').click();await expect(page.locator('#landing')).toBeVisible();
 });
 
 test('worker failure uses a legal fallback and remains playable',async({page})=>{
@@ -101,7 +108,7 @@ test('full local board shows draw popup and new game',async({page})=>{
     for(let r=0;r<15;r++)for(let c=0;c<15;c++)groups[(Math.floor(c/2)+r)%2].push(r*15+c);
     for(let i=0;i<225;i++)document.querySelectorAll('.intersection')[groups[i%2].shift()].click();
   });
-  await expect(page.locator('.piece')).toHaveCount(225);await expect(page.locator('#gameEventTitle')).toHaveText('무승부예요!');
+  await expect(page.locator('.piece')).toHaveCount(225);await expect(page.locator('#gameEventTitle')).toHaveText('무승부예요!');await expect(page.locator('.piece.winning')).toHaveCount(0);
   await page.locator('#gameEventActions').getByRole('button',{name:'새 게임'}).click();await expect(page.locator('.piece')).toHaveCount(0);
 });
 
@@ -123,4 +130,24 @@ test.describe('touch tablet',()=>{
     await point(page,7,7).tap();await point(page,7,8).tap();await expect(page.locator('.piece')).toHaveCount(2);
     await expect(page.locator('#turnText')).toHaveText('흑돌 차례');
   });
+});
+
+
+test('practice loss as black can undo to the human decision before the winning computer move',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await scriptedPractice(page,[...[3,4,5,6,7].map(c=>({r:7,c})),{r:10,c:10}],'1');
+  for(const c of [0,2,4,6,8]){await point(page,0,c).click();if(c!==8)await ready(page);}
+  await expect(page.locator('#gameEventTitle')).toContainText('컴퓨터가 이겼어요');await expect(page.locator('.piece.winning.white')).toHaveCount(5);
+  await page.screenshot({path:'test-results/practice-mobile-result.png',fullPage:true});
+  await page.locator('#gameEventActions').getByRole('button',{name:'닫기',exact:true}).click();await page.locator('#undoButton').click();
+  await expect(page.locator('.piece')).toHaveCount(8);await expect(page.locator('.piece.winning')).toHaveCount(0);await expect(page.locator('#turnText')).toContainText('내 차례');
+  await point(page,7,7).click();await ready(page);await expect(page.locator('.piece')).toHaveCount(10);
+});
+test('practice victory as white can undo its finishing move and win again',async({page})=>{
+  await scriptedPractice(page,[0,2,4,6,8].map(c=>({r:0,c})),'2');
+  for(const c of [3,4,5,6]){await point(page,7,c).click();await ready(page);}
+  await point(page,7,7).click();await expect(page.locator('#gameEventTitle')).toContainText('내가 이겼어요');await expect(page.locator('.piece.winning.white')).toHaveCount(5);
+  await page.locator('#gameEventActions').getByRole('button',{name:'닫기',exact:true}).click();await page.locator('#undoButton').click();
+  await expect(page.locator('.piece')).toHaveCount(9);await expect(page.locator('.piece.winning')).toHaveCount(0);await point(page,7,7).click();await expect(page.locator('#gameEventTitle')).toContainText('내가 이겼어요');
+  await page.locator('#gameEventActions').getByRole('button',{name:'처음 화면',exact:true}).click();await expect(page.locator('#landing')).toBeVisible();
 });

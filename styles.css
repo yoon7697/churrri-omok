@@ -77,3 +77,5 @@ body.setup-mode .top-actions .pill{white-space:nowrap}
 @media(max-width:500px){body.playing-mode .status-panel{grid-column:1/-1}}
 
 .feature-stones{display:flex;align-items:center;gap:8px}.feature-stones .stone{width:34px;height:34px}
+
+.intersection .piece.winning{background:radial-gradient(circle at 35% 25%,#ff9386,#cf302b 75%);border:2px solid #8f201e;box-shadow:0 0 0 2px #fff9,inset -2px -3px 4px #0002,1px 3px 2px #0003}.intersection .piece.winning.last:after{background:#fff;box-shadow:0 0 0 1px #8f201e}
