@@ -62,3 +62,26 @@ test('final legal move produces draw, never a false win',()=>{
   b[14][12]=0;
   assert.deepEqual(tryMove(b,14,12,1),{ok:true,win:false,draw:true});
 });
+
+
+test('normal also offers weaker legal choices between tactical emergencies',()=>{
+  const board=emptyBoard();board[7][7]=1;
+  const best=chooseMove(board,2,'normal',{random:()=>0.9}),other=chooseMove(board,2,'normal',{random:()=>0});
+  assert.notDeepEqual(other,best);assert.equal(tryMove(board,other.r,other.c,2).ok,true);
+});
+test('easy relaxes more often than normal, while both always finish or block an immediate five',()=>{
+  const board=emptyBoard();board[7][7]=1;
+  const best=chooseMove(board,2,'normal',{random:()=>0.9});
+  let easyChoices=0,normalChoices=0;
+  for(const level of ['easy','normal'])for(const roll of [0.1,0.4,0.8]){
+    let calls=0;const move=chooseMove(board,2,level,{random:()=>calls++===0?roll:0});
+    if(JSON.stringify(move)!==JSON.stringify(best)){if(level==='easy')easyChoices++;else normalChoices++;}
+  }
+  assert.ok(easyChoices>normalChoices);
+  for(const level of ['easy','normal'])for(const color of [1,2]){
+    const blocked=make([[7,3],[7,4],[7,5],[7,6]],3-color);blocked[7][2]=color;
+    assert.deepEqual(chooseMove(blocked,color,level,{random:()=>0}),{r:7,c:7});
+    const winning=make([[7,3],[7,4],[7,5],[7,6]],color);winning[7][2]=3-color;
+    assert.deepEqual(chooseMove(winning,color,level,{random:()=>0}),{r:7,c:7});
+  }
+});
