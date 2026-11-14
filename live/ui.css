@@ -1,0 +1,69 @@
+.live-entry-card{max-width:480px;margin:0 auto}.live-entry-card>.lobby-primary{margin-top:24px}
+.live-layout{display:grid;grid-template-columns:minmax(240px,340px) minmax(0,1fr);gap:20px;align-items:start}
+.live-room-panel .participant-grid{grid-template-columns:1fr;margin:18px 0}
+.live-room-panel>.room-code{font-size:40px;margin:8px 0 18px}
+.live-room-panel>.lobby-secondary{width:100%}.live-teacher-actions{display:grid;gap:14px;margin-top:20px}
+.live-board-panel{display:flex;flex-direction:column;align-items:center;padding:18px}
+.live-board-panel .board-wrap{width:100%;max-width:600px;height:auto;flex:none}
+.live-game-status{display:flex;justify-content:space-between;align-items:center;gap:20px;width:100%;font-size:20px;margin:0 0 12px}
+#liveTimer{font-variant-numeric:tabular-nums;color:var(--blue);font-size:22px;font-weight:850}
+.live-result{margin-top:20px;padding:16px;background:#f0f5e6;border-radius:16px;line-height:1.8}
+.live-result h2{font-size:21px;margin:0}.live-result p{font-size:13px;margin:8px 0;color:#746b79}
+.live-waiting{text-align:center;padding:50px 24px;line-height:1.9}.live-waiting>span{font-size:45px}.live-waiting h2{font-size:23px}.live-waiting p{font-size:14px;color:#817987}
+#liveConnection{font-size:12px;color:#627a59;max-width:65%;text-align:right;line-height:1.6}
+#liveError{position:sticky;bottom:10px;z-index:5;box-shadow:0 4px 16px #0001}
+@media(max-width:750px){.live-layout{grid-template-columns:1fr}.live-board-panel{padding:10px}.live-room-panel{padding:20px}.live-game-status{font-size:18px}.live-room-panel>.room-code{font-size:32px;margin:4px 0 12px}.live-room-panel .participant-grid{grid-template-columns:1fr 1fr}.live-room-panel .lobby-text-button{font-size:11px;padding:6px 2px}}
+body.live-playing{height:100dvh;overflow:hidden;overscroll-behavior:none}
+body.live-playing #siteHeader,body.live-playing .preview-banner{display:none!important}
+body.live-playing #onlineSection{height:100dvh;display:flex;flex-direction:column;padding-top:6px;padding-bottom:8px}
+body.live-playing .online-topline{margin-top:0;flex:none}
+body.live-playing .lobby-heading{margin:2px 0 8px;flex:none}
+body.live-playing .lobby-heading .eyebrow{display:none}
+body.live-playing .lobby-heading h1{font-size:20px;margin:0 0 3px}
+body.live-playing .lobby-heading>p:last-child{font-size:12px}
+body.live-playing .live-layout{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) 260px;gap:12px}
+body.live-playing .live-board-panel{grid-column:1;grid-row:1;min-height:0;justify-content:center;overflow:hidden}
+body.live-playing .live-room-panel{grid-column:2;grid-row:1;max-height:100%;overflow:auto;min-height:0}
+body.live-playing .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 225px));max-width:none}
+body.live-playing #liveError:empty{display:none}
+@media(max-width:750px){body.live-playing .live-layout{display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain}body.live-playing .live-board-panel{order:-1;flex:none;padding:6px;width:100%}body.live-playing .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 290px))}body.live-playing .live-room-panel{padding:10px;flex:1;max-height:none;overflow:auto}body.live-playing .live-room-panel>.side-kicker,body.live-playing .live-room-panel>.room-code,body.live-playing .live-room-panel>.lobby-secondary,body.live-playing .live-room-panel>.field-hint{display:none}body.live-playing .live-room-panel>p{font-size:12px;margin:2px}body.live-playing .live-board-panel .field-hint,body.live-playing .board-caption{display:none}body.live-playing .live-game-status{font-size:16px;margin-bottom:7px}}
+
+.live-my-color{font-size:13px;color:#817987;white-space:nowrap}
+@media(max-width:750px){body.live-playing .live-room-panel{width:100%;flex:0 0 auto;min-height:0}}
+
+.live-progress h2{font-size:20px;margin:0 0 14px}.live-progress h2 small{display:block;font-size:12px;color:#817987;margin-top:5px}
+.live-room-panel .live-progress{margin-top:22px}.live-match-list{display:grid;gap:10px}
+.live-match-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:13px;border:1px solid #e5e8f0;border-radius:14px;background:#fffdf8}
+.live-match-row>div{flex:1;min-width:100px}.live-match-row strong{font-size:14px}.live-match-row p{font-size:12px;line-height:1.5;color:#817987;margin:5px 0 0;overflow-wrap:anywhere}
+.live-match-row.is-mine{border-color:var(--blue);background:#f0f5ff}.live-match-status{font-size:12px;color:#475975}
+.live-match-row .lobby-text-button{font-size:12px;padding:8px;min-height:40px}
+.live-wait-notice{padding:14px;background:#eff4ff;border-radius:14px;font-size:14px;line-height:1.8}
+.live-standings{margin-top:24px;background:#fffdf8;border-radius:20px;padding:24px}.live-standings h2{font-size:22px;margin-top:0}.live-standings table{border-collapse:collapse;width:100%;text-align:left}.live-standings th,.live-standings td{padding:12px;border-bottom:1px solid #e5e8f0;overflow-wrap:anywhere}
+@media(max-width:750px){.live-match-row{padding:10px}.live-standings{padding:16px}.live-standings th,.live-standings td{padding:10px 6px}}
+
+.live-new-room{display:block;margin:20px auto}
+
+.live-watch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0 0 12px;color:var(--blue)}
+.live-watch-head strong{font-size:14px}.live-watch-head .lobby-secondary{width:auto;min-height:40px;padding:8px 12px;font-size:12px}
+.live-watch-result{width:100%;text-align:center;font-size:14px;line-height:1.6;padding:10px;background:#eff4ff;border-radius:12px;margin:0 0 12px;overflow-wrap:anywhere}
+@media(max-width:750px){body.live-playing .live-watch-head{margin-bottom:6px}body.live-playing:has(#liveWatchTitle) .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 350px))}}
+@media(min-width:751px){body.live-playing:has(#liveWatchTitle) .live-board-panel .board-wrap{width:min(100%,calc(100dvh - 285px))}}
+
+.live-roster-details{margin:16px 0;border:1px solid #e5e8f0;border-radius:12px;padding:12px}.live-roster-details summary{cursor:pointer;font-size:14px;font-weight:750;color:var(--blue);padding:6px 0}.live-roster-details .participant-grid{margin-bottom:0}
+
+.live-roster-panel{min-width:0;margin-top:20px}.live-layout>.live-roster-panel{margin-top:0}
+.live-roster-heading{margin-bottom:18px}.live-roster-heading h2{font-size:23px;margin:0 0 8px}.live-roster-heading h2 small{font-size:15px;color:var(--blue);margin-left:8px}.live-roster-heading p{font-size:13px;line-height:1.7;color:#817987;margin:0}
+.live-roster-panel .participant-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.live-roster-panel .student-details{min-width:0}.live-roster-panel .student-details>b{overflow-wrap:anywhere}.live-roster-panel .lobby-text-button{margin-left:auto;flex:none;min-height:44px;padding:8px}
+.live-roster-empty{text-align:center;padding:38px 12px;line-height:1.8}.live-roster-empty>span{font-size:42px}.live-roster-empty h3{font-size:23px}.live-roster-empty p{font-size:13px;color:#817987}
+@media(max-width:500px){.live-roster-panel .participant-grid{grid-template-columns:1fr}.live-roster-heading h2{font-size:21px}}
+
+.live-invite-qr{display:flex;align-items:center;justify-content:center;gap:10px;text-align:left;width:100%;padding:6px 10px;margin:0 0 14px;border:1px solid #d9e5f9;border-radius:16px;background:#fff;color:var(--blue);font:inherit;font-size:13px;font-weight:750;cursor:pointer}
+.live-invite-qr>span:first-child{display:block;width:112px;max-width:50%;flex:none}.live-invite-qr svg,.live-qr-large svg{display:block;width:100%;height:auto;aspect-ratio:1;shape-rendering:crispEdges}
+.live-invite-qr:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.lobby-dialog.live-qr-dialog{width:min(92vw,720px);max-height:92dvh;overflow:auto;padding:24px;text-align:center}
+.live-qr-dialog .dialog-head{margin-bottom:12px;text-align:left}.live-qr-large{width:min(100%,480px,max(160px,calc(100dvh - 380px)));margin:auto;background:#fff}
+.live-qr-code{font-size:18px;margin:6px 0 10px}.live-qr-code strong{display:block;font-size:42px;letter-spacing:.22em;padding-left:.22em;color:var(--navy,#202942)}
+.live-qr-help{font-size:15px;line-height:1.7;color:#746b79;margin:10px 0 16px}.live-qr-dialog>.lobby-secondary{width:100%;max-width:320px}
+#liveQrNotice{font-size:13px;color:var(--blue);line-height:1.6;margin:10px 0 0}#liveQrNotice:empty{display:none}
+@media(max-width:500px){.lobby-dialog.live-qr-dialog{padding:16px}.live-qr-dialog .dialog-head h2{font-size:18px}.live-qr-code strong{font-size:34px}}

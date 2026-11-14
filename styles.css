@@ -75,3 +75,5 @@ body.setup-mode #siteHeader{flex-wrap:wrap}
 body.setup-mode .brand{flex-shrink:0}
 body.setup-mode .top-actions .pill{white-space:nowrap}
 @media(max-width:500px){body.playing-mode .status-panel{grid-column:1/-1}}
+
+.feature-stones{display:flex;align-items:center;gap:8px}.feature-stones .stone{width:34px;height:34px}

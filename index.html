@@ -8,6 +8,10 @@
   <title>우리 반 오목왕 | CHURRRI'S LAB</title>
   <link rel="stylesheet" href="./styles.css" />
   <script type="module" src="./app.js"></script>
+  <script type="module" src="./online/lobby.js"></script>
+  <script type="module" src="./live/ui.js"></script>
+  <link rel="stylesheet" href="./live/ui.css" />
+  <link rel="stylesheet" href="./online/lobby.css" />
 </head>
 <body class="home-mode">
   <header class="topbar wrap" id="siteHeader">
@@ -22,15 +26,17 @@
   <main id="home">
     <section class="hero wrap" id="landing" aria-labelledby="headline">
       <div class="hero-copy"><p class="eyebrow">CLASSROOM OMOK</p><h1 id="headline">우리 반<br><em>오목왕<span class="crown">👑</span></em></h1><p class="intro">우리 반 친구들과 함께 즐기는 온라인 오목!<br>방을 만들고, 함께 입장해 대결해요.<br>컴퓨터와 연습하고, 친구와 한 기기에서 대결해요.</p></div>
-      <div class="hero-visual"><img src="./assets/omok-hero.webp" alt="교실에서 친구 두 명이 오목판을 사이에 두고 즐겁게 대결하는 그림" /></div>
+      <div class="hero-visual"><img src="./assets/omok-hero-natural.webp" alt="교실에서 친구 두 명이 오목판을 사이에 두고 즐겁게 대결하는 그림" /></div>
     </section>
 
     <section class="features wrap" aria-label="게임 방식 선택">
-      <article class="feature-card"><span class="feature-icon">🏫</span><h2>방 만들기</h2><p>학생들이 각자 기기로 접속하는 온라인 방 기능은 다음 버전에서 제공할 예정이에요.</p><button class="feature-button yellow" type="button" data-unavailable="온라인 방 만들기">방 만들기 <span>준비 중</span></button></article>
+      <article class="feature-card"><span class="feature-icon">🏫</span><h2>방 만들기</h2><p>선생님 대기실을 먼저 체험해 보세요. 실제 온라인 연결은 다음 단계에서 열려요.</p><button class="feature-button yellow" type="button" id="createOnlineRoom">방 만들기</button></article>
       <article class="feature-card"><span class="feature-icon">🎮</span><h2>연습하기</h2><p>내 실력에 맞는 난이도를 고르고 컴퓨터와 오목을 연습해요!</p><button class="feature-button" type="button" id="startPractice">연습 시작하기 <span>↗</span></button></article>
-      <article class="feature-card"><span class="feature-icon">🔵🔴</span><h2>1:1 대결</h2><p>친구와 같은 패드 또는 컴퓨터에서 흑과 백을 번갈아 두며 대결해요!</p><button class="feature-button primary" id="startLocal" type="button">바로 대결하기 <span>↗</span></button></article>
-      <article class="feature-card"><span class="feature-icon">🔑</span><h2>방 코드로 참가</h2><p>온라인 방 코드로 참여하는 기능은 다음 버전에서 열릴 예정이에요.</p><div class="join-row"><input id="joinCode" type="text" inputmode="numeric" maxlength="4" placeholder="방 코드 4자리" aria-label="방 코드 4자리" disabled /><button class="join-button" data-unavailable="방 코드 입장" type="button">입장</button></div></article>
+      <article class="feature-card"><span class="feature-icon feature-stones" role="img" aria-label="흑돌과 백돌"><i class="stone black" aria-hidden="true"></i><i class="stone white" aria-hidden="true"></i></span><h2>1:1 대결</h2><p>친구와 같은 패드 또는 컴퓨터에서 흑과 백을 번갈아 두며 대결해요!</p><button class="feature-button primary" id="startLocal" type="button">바로 대결하기 <span>↗</span></button></article>
+      <article class="feature-card"><span class="feature-icon">🔑</span><h2>방 코드로 참가</h2><p>방 코드와 닉네임을 입력하고 학생 대기실 화면을 체험해요.</p><div class="join-row"><input id="joinCode" type="text" inputmode="numeric" maxlength="4" placeholder="방 코드 4자리" aria-label="방 코드 4자리" /><button class="join-button" id="joinOnlineRoom" type="button">입장</button></div></article>
     </section>
+
+    <section id="onlineSection" class="online-section wrap hidden" aria-labelledby="onlineTitle" tabindex="-1"></section>
 
     <section class="practice-section wrap hidden" id="practiceSection" aria-labelledby="practiceTitle" tabindex="-1">
       <div class="section-head"><div><p class="eyebrow">COMPUTER PRACTICE</p><h2 id="practiceTitle">컴퓨터와 연습하기</h2><p>난이도와 내 돌을 골라 주세요.</p></div><button class="pill" id="practiceHome" type="button">← 메인으로</button></div>
@@ -70,5 +76,6 @@
     <p id="gameEventText"></p>
     <div id="gameEventActions" class="event-dialog-actions"></div>
   </dialog>
+  <dialog id="lobbyDialog" class="lobby-dialog" aria-labelledby="lobbyDialogTitle"></dialog>
 </body>
 </html>

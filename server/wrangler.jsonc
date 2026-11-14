@@ -1,0 +1,16 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "churrri-omok-online",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-30",
+  "workers_dev": true,
+  "durable_objects": { "bindings": [
+    { "name": "ROOMS", "class_name": "Room" },
+    { "name": "REGISTRY", "class_name": "Registry" }
+  ] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room", "Registry"] }],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://churrri-omok.vercel.app,https://churrri-omok-git-feat-online-server-yoon76971-5417.vercel.app"
+  },
+  "observability": { "enabled": false }
+}

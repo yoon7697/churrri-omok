@@ -1,3 +1,8 @@
 node_modules/
 playwright-report/
 test-results/
+
+server/dist/
+.wrangler/
+.dev.vars*
+.env*
