@@ -146,7 +146,7 @@ test('finished students and teacher can switch watched games without changing re
   const buttons=students[0].page.getByRole('button',{name:/관전하기/});await expect(buttons).toHaveCount(2);await buttons.first().click();await expect(students[0].page.locator('#liveWatchTitle')).toBeVisible();const firstTitle=await students[0].page.locator('#liveWatchTitle').innerText();
   await students[0].page.getByRole('button',{name:/관전하기/}).filter({visible:true}).last().click();await expect(students[0].page.locator('#liveWatchTitle')).not.toHaveText(firstTitle);
   await expect(students[0].page.locator('.live-result')).toContainText('내 누적 승점 1점');await students[0].page.getByRole('button',{name:'관전 나가기',exact:true}).click();await expect(students[0].page.locator('#liveWatchTitle')).toHaveCount(0);await expect(students[0].page.locator('#liveTurn')).toHaveText('경기 종료');
-  await teacher.page.locator('.live-match-row').filter({hasText:'진행 중'}).getByRole('button',{name:/관전하기/}).first().click();await expect(teacher.page.locator('#liveWatchTitle')).toBeVisible();await expect(teacher.page.locator('#liveBoard .intersection:enabled')).toHaveCount(0);await teacher.page.screenshot({path:'test-results/spectator-teacher.png',fullPage:true});await teacher.page.locator('.live-roster-details summary').click();await expect(teacher.page.getByRole('button',{name:'전환학생0 관리',exact:true})).toBeVisible();
+  await teacher.page.locator('.live-match-row').filter({hasText:'진행 중'}).getByRole('button',{name:/관전하기/}).first().click();await expect(teacher.page.locator('#liveWatchTitle')).toBeVisible();await expect(teacher.page.locator('#liveBoard .intersection:enabled')).toHaveCount(0);await teacher.page.screenshot({path:'test-results/spectator-teacher.png',fullPage:true});await expect(teacher.page.getByRole('button',{name:'전환학생0 관리',exact:true})).toBeVisible();
  }finally{await cleanup(teacher,...students);}
 });
 
@@ -190,4 +190,42 @@ test('teacher QR decodes to a clean student invitation and stays usable during l
     await student.page.locator('#liveNickname').fill('새큐알학생');await student.page.getByRole('button',{name:'실제 방 참가하기'}).click();
     await expect(nextTeacher.page.locator('#liveTeacherRoster')).toContainText('새큐알학생');
   }finally{await cleanup(teacher,...(student?[student]:[]),...(nextTeacher?[nextTeacher]:[]));}
+});
+
+test('teacher sees live scores in spectator view and can add a round from the results',async({browser})=>{
+  const {teacher,code}=await room(browser,'198.51.100.62');
+  const a=await join(browser,code,'순위학생1'),b=await join(browser,code,'순위학생2'),c=await join(browser,code,'순위학생3');
+  const page=teacher.page,startButton=page.locator('#liveStart');
+  const roster=page.locator('#liveTeacherRoster');
+  await startButton.click();
+  await page.getByRole('button',{name:'경기 1 관전하기'}).click();
+  await expect(page.locator('#liveWatchTitle')).toBeVisible();
+  await expect(roster.locator('.live-roster-points')).toHaveText(['2점','0점','0점']);
+  await expect(roster.locator('.live-roster-rank')).toHaveText(['1위','2위','2위']);
+  await expect(roster.locator('.participant-card').first()).toContainText('부전승');
+
+  async function finishRound(){
+    await page.getByRole('button',{name:'현재 경기 무승부로 종료',exact:true}).click();
+    await page.locator('#liveConfirm').click();
+  }
+  await finishRound();
+  await expect(roster.locator('.live-roster-points')).toHaveText(['2점','1점','1점']);
+  for(let round=2;round<=3;round++){
+    await expect(startButton).toHaveText('다음 라운드 시작');
+    await startButton.click();
+    await finishRound();
+  }
+  await expect(a.page.locator('.live-standings')).toBeVisible();
+  await expect(a.page.getByRole('button',{name:'한 라운드 더'})).toHaveCount(0);
+  await expect(startButton).toHaveText('한 라운드 더');
+  await startButton.click();
+  await expect(page.locator('#liveRoomCode')).toHaveText(code);
+  await expect(a.page.locator('#onlineSection')).toContainText('4 / 4라운드');
+  await expect(a.page.locator('.live-standings')).toHaveCount(0);
+  await finishRound();
+  await expect(a.page.locator('.live-standings tbody tr').first()).toContainText('6점');
+  await page.getByRole('button',{name:'방 닫기',exact:true}).click();
+  await page.locator('#liveConfirm').click();
+  await expect(page.getByText('방이 닫혔어요.',{exact:true})).toBeVisible();
+  await cleanup(teacher,a,b,c);
 });
