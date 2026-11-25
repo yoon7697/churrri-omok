@@ -79,11 +79,17 @@ export function command(room, actorId, action, data, onlineIds, now, random = Ma
   const teacher = actorId === 'teacher';
   const me = room.participants.find(p => p.id === actorId && !p.removed);
   if (!teacher && !me) fail('참가 권한이 없어요.', 403);
-  const teacherActions = ['start', 'rename', 'kick', 'lock', 'draw', 'close'];
+  const teacherActions = ['start', 'extra-round', 'rename', 'kick', 'lock', 'draw', 'close'];
   if (teacherActions.includes(action) && !teacher) fail('선생님만 사용할 수 있어요.', 403);
-  if (action === 'start') {
-    if (!['lobby', 'between'].includes(room.phase) || room.round >= room.rounds) fail('모든 경기가 끝난 뒤 다음 라운드를 시작할 수 있어요.');
+  if (action === 'start' || action === 'extra-round') {
+    const extra = action === 'extra-round';
+    if (extra) {
+      if (room.phase !== 'finished' || data.round !== room.round) fail('대회 결과 화면에서 한 라운드를 더 시작할 수 있어요.', 409);
+    } else if (!['lobby', 'between'].includes(room.phase) || room.round >= room.rounds) {
+      fail('모든 경기가 끝난 뒤 다음 라운드를 시작할 수 있어요.');
+    }
     const { pairs, bye } = pairing(room, onlineIds, random);
+    if (extra) room.rounds = room.round + 1;
     room.round++;
     for (const [i, players] of pairs.entries()) {
       players[0].black++; for (const p of players) p.games++;
@@ -179,6 +185,7 @@ export function view(room, actorId, onlineIds, now) {
   const watched = out.canWatch && selection?.round === room.round && matches.find(m => m.id === selection.matchId && m.status !== 'bye' && !m.players.includes(actorId));
   if (watched) out.spectating = { ...matchView(room, watched, actorId, onlineIds), readOnly: true };
   if (room.phase === 'finished') {
+    if (teacher) out.canAddRound = true;
     const sorted = room.participants.filter(p => !p.removed).sort((a, b) => b.points - a.points);
     out.standings = sorted.map((p, i) => ({ nickname: p.nickname, points: p.points, rank: sorted.findIndex(other => other.points === p.points) + 1, me: p.id === actorId }));
   }
