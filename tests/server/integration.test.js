@@ -139,3 +139,49 @@ test('spectators receive live anonymous updates, survive restart and return to t
  tw.send('draw');await tw.wait(e=>e.state?.phase==='between');tw.send('start');const next=(await back[byeIndex].wait(e=>e.state?.round===2)).state;assert.equal(next.spectating,undefined);assert.equal(next.match.status,'active');assert.equal(next.canWatch,false);
  tw.send('close');await tw.wait(e=>e.state?.phase==='closed');
 });
+
+test('only the teacher can extend a completed tournament by exactly one round',async()=>{
+  const t=await setup(),tw=await socket(t);
+  const people=await Promise.all([student(t,'추가학생하나'),student(t,'추가학생둘')]);
+  const [a,b]=await Promise.all(people.map(socket));
+  await tw.wait(e=>e.state?.onlineCount===2);
+  const extra=(peer,round)=>peer.send('extra-round',{round});
+  const error=(peer,id,status)=>peer.wait(e=>e.type==='error'&&e.requestId===id&&e.status===status);
+  await error(tw,extra(tw,0),409);
+  for(let round=1;round<=3;round++){
+    tw.send('start');
+    await tw.wait(e=>e.state?.round===round&&e.state.phase==='playing');
+    tw.send('draw');
+    await tw.wait(e=>e.state?.round===round&&e.state.phase===(round===3?'finished':'between'));
+  }
+  const finished=(await tw.wait(e=>e.state?.canAddRound===true)).state;
+  const studentFinished=(await a.wait(e=>e.state?.phase==='finished')).state;
+  assert.equal(studentFinished.canAddRound,undefined);
+  assert.equal(studentFinished.me.points,3);
+  await error(a,extra(a,3),403);
+  await b.ws.close();
+  await tw.wait(e=>e.state?.onlineCount===1);
+  await error(tw,extra(tw,3),400);
+  const unchanged=(await request(`/rooms/${t.roomId}/state`,undefined,t.token)).data;
+  assert.equal(unchanged.rounds,3);
+  assert.equal(unchanged.phase,'finished');
+  const back=await socket(people[1]);
+  await tw.wait(e=>e.state?.onlineCount===2);
+  const id=extra(tw,3);
+  await tw.wait(e=>e.type==='ack'&&e.requestId===id);
+  const next=(await a.wait(e=>e.state?.round===4&&e.state?.phase==='playing')).state;
+  const other=(await back.wait(e=>e.state?.round===4&&e.state?.phase==='playing')).state;
+  assert.equal(next.code,finished.code);
+  assert.equal(next.rounds,4);
+  assert.equal(next.standings,undefined);
+  assert.equal(next.me.points,3);
+  assert.equal(next.match.ply,0);
+  assert.equal(next.match.id,other.match.id);
+  await error(tw,extra(tw,3),409);
+  tw.send('draw');
+  const result=(await a.wait(e=>e.state?.round===4&&e.state?.phase==='finished')).state;
+  assert.deepEqual(result.standings.map(p=>[p.points,p.rank]),[[4,1],[4,1]]);
+  await error(tw,extra(tw,3),409);
+  tw.send('close');
+  await tw.wait(e=>e.state?.phase==='closed');
+});

@@ -52,21 +52,38 @@ function attach(){
   });
   connection.connect();render();
 }
-function roster(){return `<div class="participant-grid">${(state.participants||[]).map(p=>`<div class="participant-card"><span class="student-avatar" aria-hidden="true">${e([...p.nickname][0])}</span><span class="student-details"><b>${e(p.nickname)}</b><small>${p.online?'● 연결됨':'○ 접속 끊김'}${p.me?' · 나':''}${state.round?' · '+(p.roundStatus==='active'?'경기 중':p.roundStatus==='waiting'?'다음 라운드 대기':p.roundStatus==='bye'?'부전승':'경기 종료'):''}</small></span>${role==='teacher'?`<button class="lobby-text-button" data-live="manage" data-id="${e(p.id)}" type="button" aria-label="${e(p.nickname)} 관리">관리</button>`:''}</div>`).join('')}</div>`;}
+function roster(){
+  const teacher=role==='teacher',participants=state.participants||[];
+  const students=teacher?[...participants].sort((a,b)=>b.points-a.points):participants;
+  const cards=students.map(p=>{
+    const rank=teacher?students.findIndex(other=>other.points===p.points)+1:0;
+    const name=teacher?`<span class="live-roster-name"><span class="live-roster-rank">${rank}위</span><b>${e(p.nickname)}</b><strong class="live-roster-points">${p.points}점</strong></span>`:`<b>${e(p.nickname)}</b>`;
+    const status=p.roundStatus==='active'?'경기 중':p.roundStatus==='waiting'?'다음 라운드 대기':p.roundStatus==='bye'?'부전승':'경기 종료';
+    return `<div class="participant-card"><span class="student-avatar" aria-hidden="true">${e([...p.nickname][0])}</span><span class="student-details">${name}<small>${p.online?'● 연결됨':'○ 접속 끊김'}${p.me?' · 나':''}${state.round?' · '+status:''}</small></span>${teacher?`<button class="lobby-text-button" data-live="manage" data-id="${e(p.id)}" type="button" aria-label="${e(p.nickname)} 관리">관리</button>`:''}</div>`;
+  });
+  return `<div class="participant-grid">${cards.join('')}</div>`;
+}
 function inviteURL(){return studentInviteURL(location.href,state.code);}
 function teacherInvite(){return `<button type="button" class="live-invite-qr" data-live="qr" aria-label="학생 입장 QR코드 크게 보기"><span aria-hidden="true">${inviteQrSVG(inviteURL())}</span><span>QR코드 크게 보기</span></button>`;}
 async function copyInviteLink(){
   try{await navigator.clipboard.writeText(inviteURL());message('학생 입장 링크를 복사했어요.');return true;}catch{message(`방 코드 ${state.code}를 학생에게 알려 주세요.`);return false;}
 }
-function teacherRoster(collapsed=false){
+function teacherRoster(){
   const content=`<div class="live-roster-heading"><h2>참가 학생 <small>${state.count}명</small></h2><p>접속 중 ${state.onlineCount}명 · 관리 버튼으로 이름을 바꾸거나 내보낼 수 있어요.</p></div>${state.count?roster():'<div class="live-roster-empty"><span aria-hidden="true">⚫ ⚪</span><h3>친구들이 모이면 시작해요</h3><p>입장한 학생들이 여기에 표시돼요.</p></div>'}`;
-  return `<section id="liveTeacherRoster" class="lobby-card live-roster-panel">${collapsed?`<details class="live-roster-details"><summary>참가 학생 관리 · ${state.count}명</summary>${content}</details>`:content}</section>`;
+  return `<section id="liveTeacherRoster" class="lobby-card live-roster-panel">${content}</section>`;
 }
 function matchList(){
   if(!state.matches?.length)return '';
   return `<section class="live-progress" aria-label="라운드 경기 현황"><h2>경기 현황 <small>${state.completed} / ${state.total}명 종료</small></h2><div class="live-match-list">${state.matches.map(m=>`<div class="live-match-row ${m.mine?'is-mine':''}" data-match="${e(m.id)}"><div><strong>${m.status==='bye'?'부전승':`경기 ${m.number}`}${m.mine?' · 내 경기':''}</strong><p>${m.names?e(m.names.join(' vs ')):'익명 대결'}</p></div><span class="live-match-status">${m.status==='active'?`진행 중${m.connected<2?' · 재접속 대기':''}`:m.status==='bye'?'2점':m.status==='draw'?'무승부':'종료'}</span>${state.canWatch&&m.status!=='bye'&&!m.mine?`<button class="lobby-text-button" data-live="watch" data-id="${e(m.id)}" type="button" aria-label="경기 ${m.number} 관전하기" ${state.spectating?.id===m.id||busy||status!=='online'?'disabled':''}>${state.spectating?.id===m.id?'관전 중':'관전하기'}</button>`:''}${role==='teacher'&&m.status==='active'?`<button class="lobby-text-button" data-live="draw-match" data-id="${e(m.id)}" type="button" aria-label="경기 ${m.number} 무승부 종료">무승부 종료</button>`:''}</div>`).join('')}</div></section>`;
 }
 function standings(){return state.standings?`<section class="live-standings"><h2>대회 결과</h2><table><thead><tr><th>순위</th><th>닉네임</th><th>승점</th></tr></thead><tbody>${state.standings.map(p=>`<tr><td>${p.rank}위</td><td>${e(p.nickname)}${p.me?' · 나':''}</td><td>${p.points}점</td></tr>`).join('')}</tbody></table><p class="field-hint">승점이 같으면 공동순위예요.</p></section>`:'';}
+function roundButton(){
+  const finished=state.phase==='finished';
+  const extra=finished&&state.canAddRound;
+  const disabled=state.onlineCount<2||status!=='online'||busy||(finished&&!extra);
+  const label=extra?'한 라운드 더':finished?'정해진 대결을 모두 마쳤어요':state.round?'다음 라운드 시작':'대결 시작';
+  return `<button class="lobby-primary" id="liveStart" data-live="${extra?'extra-round':'start'}" type="button" ${disabled?'disabled':''}>${label}</button>${extra&&state.onlineCount<2?'<p class="field-hint">접속 중인 학생이 2명 이상이면 시작할 수 있어요.</p>':''}`;
+}
 function render(){
   if(!state){shell(heading(fatal?'연결을 확인해 주세요':'대기실에 연결하고 있어요',fatal||'잠시만 기다려 주세요.')+(fatal?'<button class="lobby-secondary" data-live="retry" type="button">이 탭에서 다시 연결</button><button class="lobby-text-button" data-live="forget" type="button">새로 참가하기</button>':''));return;}
   const ownMatch=state.match,watching=!!state.spectating,match=state.spectating||ownMatch,active=ownMatch?.status==='active',playing=state.phase==='playing';
@@ -76,14 +93,14 @@ function render(){
   shell(heading(title,`${state.round} / ${state.rounds}라운드 · 한 판 최대 5분 · 경기 종료 ${state.completed} / ${state.total}명`)+
     (state.phase==='closed'?`<section class="lobby-card"><h2>방이 닫혔어요.</h2><p>새 대회를 시작하거나 다른 방에 참가할 수 있어요.</p><button class="lobby-primary" data-live="forget" type="button">${role==='teacher'?'새 대회 방 만들기':'다른 방 참가하기'}</button></section>`:
     `<div class="live-layout"><section class="lobby-card live-room-panel">${role==='teacher'?`<span class="side-kicker">방 코드 · ${state.count} / ${state.capacity||40}명</span><strong class="room-code" id="liveRoomCode">${state.code}</strong>${teacherInvite()}<button class="lobby-secondary" data-live="copy" type="button">학생 입장 링크 복사</button><p class="field-hint">접속 중 ${state.onlineCount}명 · 같은 승점끼리 우선 대결해요.</p>`:!playing?roster():active?'<p>상대방: 익명 참가자</p>':''}
-      ${role==='teacher'?`<div class="live-teacher-actions"><button class="lobby-secondary" data-live="lock" type="button" ${status!=='online'||busy?'disabled':''}>${state.locked?'입장 잠금 해제':'입장 잠그기'}</button>${playing?`<button class="lobby-secondary" data-live="draw" type="button">${state.matches.filter(m=>m.status==='active').length===1?'현재 경기 무승부로 종료':'진행 중인 경기 모두 무승부로 종료'}</button><p class="field-hint">모든 경기가 끝나면 다음 라운드를 시작할 수 있어요.</p>`:`<button class="lobby-primary" id="liveStart" data-live="start" type="button" ${state.onlineCount<2||state.phase==='finished'||status!=='online'||busy?'disabled':''}>${state.phase==='finished'?'정해진 대결을 모두 마쳤어요':state.round?'다음 라운드 시작':'대결 시작'}</button>`}<button class="close-room-button" data-live="close" type="button">방 닫기</button></div>`:
+      ${role==='teacher'?`<div class="live-teacher-actions"><button class="lobby-secondary" data-live="lock" type="button" ${status!=='online'||busy?'disabled':''}>${state.locked?'입장 잠금 해제':'입장 잠그기'}</button>${playing?`<button class="lobby-secondary" data-live="draw" type="button">${state.matches.filter(m=>m.status==='active').length===1?'현재 경기 무승부로 종료':'진행 중인 경기 모두 무승부로 종료'}</button><p class="field-hint">모든 경기가 끝나면 다음 라운드를 시작할 수 있어요.</p>`:roundButton()}<button class="close-room-button" data-live="close" type="button">방 닫기</button></div>`:
       !active&&state.phase!=='finished'?'<button class="lobby-primary" data-live="practice" type="button">컴퓨터와 연습하기</button><p class="field-hint">내 경기가 시작되면 자동으로 이동해요.</p>':''}
       ${ownMatch&&!active?`<div class="live-result" role="status"><h2>${ownMatch.result==='win'?'내가 이겼어요!':ownMatch.result==='loss'?'상대가 이겼어요!':ownMatch.result==='draw'?'무승부예요!':`${ownMatch.winnerColor===1?'흑돌':'백돌'} 승리!`}</h2><p>${e(ownMatch.names?.join(' vs '))}</p>${me?`<strong>내 누적 승점 ${me.points}점</strong>`:''}<p>승리 2점 · 무승부 1점 · 패배 0점</p>${playing?'<p>다른 경기가 끝날 때까지 기다려 주세요.</p>':''}</div>`:''}
       ${state.bye?`<div class="live-result" role="status"><h2>부전승 · 2점</h2><p>참가 인원이 홀수여서 이번 라운드는 쉬어요.</p><strong>내 누적 승점 ${me?.points}점</strong></div>`:''}
       ${state.waitingForNextRound?'<p class="live-wait-notice" role="status">다음 라운드부터 참여할 수 있어요. 지금은 경기 현황을 확인하거나 컴퓨터와 연습해 보세요.</p>':''}
       ${fatal?`<p class="lobby-error">${e(fatal)}</p><button class="lobby-secondary" data-live="retry" type="button">이 탭에서 다시 연결</button>`:''}
       ${role==='student'||watching?matchList():''}
-    </section>${teacherLobby?teacherRoster():match?`<section class="lobby-card live-board-panel">${watching?`<div class="live-watch-head"><strong id="liveWatchTitle">경기 ${match.number} 관전 · 보기 전용</strong><button class="lobby-secondary" data-live="unwatch" type="button">관전 나가기</button></div>${match.names&&match.status!=='active'?`<p class="live-watch-result" role="status">${e(match.names.join(' vs '))} · ${match.result==='draw'?'무승부':`${match.winnerColor===1?'흑돌':'백돌'} 승리`}</p>`:''}`:''}<div class="live-game-status"><strong id="liveTurn">${watching?(match.status==='active'?`${match.turn===1?'흑돌':'백돌'} 차례`:'관전 경기 종료'):active?(role==='teacher'?`${match.turn===1?'흑돌':'백돌'} 차례`:(match.myColor===match.turn?'내 차례':'상대 차례')):'경기 종료'}</strong>${role==='student'&&!watching?`<span class="live-my-color">내 돌: ${match.myColor===1?'흑돌':'백돌'}</span>`:''}<span id="liveTimer" aria-label="남은 경기 시간"></span></div>${role==='student'&&!watching&&active&&!match.opponentOnline?'<p class="field-hint">상대가 다시 연결하고 있어요.</p>':''}<div class="board-wrap"><div id="liveBoard" class="board" role="grid" aria-label="온라인 15행 15열 오목판"></div></div><p class="board-caption">마지막 수는 빨간색으로 표시돼요.</p></section>`:`<aside class="lobby-card ${role==='teacher'&&state.matches.length?'':'live-waiting'}">${role==='teacher'&&state.matches.length?matchList():`<span aria-hidden="true">⚫ ⚪</span><h2>${state.bye?'잠깐 쉬어 가요':state.waitingForNextRound?'다음 라운드에 만나요':'친구들이 모이면 시작해요'}</h2><p>${state.round?'선생님이 다음 라운드를 시작할 때까지 기다려 주세요.':'선생님이 시작하면 자동으로 상대와 연결돼요.'}</p>`}</aside>`}</div>${role==='teacher'&&!teacherLobby?teacherRoster(watching):''}${standings()}${state.phase==='finished'?`<button class="lobby-primary live-new-room" data-live="forget" type="button">${role==='teacher'?'새 대회 방 만들기':'다른 방 참가하기'}</button>`:''}`));
+    </section>${teacherLobby?teacherRoster():match?`<section class="lobby-card live-board-panel">${watching?`<div class="live-watch-head"><strong id="liveWatchTitle">경기 ${match.number} 관전 · 보기 전용</strong><button class="lobby-secondary" data-live="unwatch" type="button">관전 나가기</button></div>${match.names&&match.status!=='active'?`<p class="live-watch-result" role="status">${e(match.names.join(' vs '))} · ${match.result==='draw'?'무승부':`${match.winnerColor===1?'흑돌':'백돌'} 승리`}</p>`:''}`:''}<div class="live-game-status"><strong id="liveTurn">${watching?(match.status==='active'?`${match.turn===1?'흑돌':'백돌'} 차례`:'관전 경기 종료'):active?(role==='teacher'?`${match.turn===1?'흑돌':'백돌'} 차례`:(match.myColor===match.turn?'내 차례':'상대 차례')):'경기 종료'}</strong>${role==='student'&&!watching?`<span class="live-my-color">내 돌: ${match.myColor===1?'흑돌':'백돌'}</span>`:''}<span id="liveTimer" aria-label="남은 경기 시간"></span></div>${role==='student'&&!watching&&active&&!match.opponentOnline?'<p class="field-hint">상대가 다시 연결하고 있어요.</p>':''}<div class="board-wrap"><div id="liveBoard" class="board" role="grid" aria-label="온라인 15행 15열 오목판"></div></div><p class="board-caption">마지막 수는 빨간색으로 표시돼요.</p></section>`:`<aside class="lobby-card ${role==='teacher'&&state.matches.length?'':'live-waiting'}">${role==='teacher'&&state.matches.length?matchList():`<span aria-hidden="true">⚫ ⚪</span><h2>${state.bye?'잠깐 쉬어 가요':state.waitingForNextRound?'다음 라운드에 만나요':'친구들이 모이면 시작해요'}</h2><p>${state.round?'선생님이 다음 라운드를 시작할 때까지 기다려 주세요.':'선생님이 시작하면 자동으로 상대와 연결돼요.'}</p>`}</aside>`}</div>${role==='teacher'&&!teacherLobby?teacherRoster():''}${standings()}${state.phase==='finished'?`<button class="lobby-primary live-new-room" data-live="forget" type="button">${role==='teacher'?'새 대회 방 만들기':'다른 방 참가하기'}</button>`:''}`));
   if(state.phase==='closed'&&dialog.classList.contains('live-qr-dialog'))dialog.close();
   if(match&&state.phase!=='closed')renderBoard(match,watching);updateTimer();
 }
@@ -125,6 +142,7 @@ root.addEventListener('click',async event=>{
   if(a==='watch'){await act('watch',{matchId:button.dataset.id});return;}
   if(a==='unwatch'){await act('unwatch');return;}
   if(a==='start'){await act('start');return;}
+  if(a==='extra-round'){await act('extra-round',{round:state.round});return;}
   if(a==='lock'){await act('lock',{locked:!state.locked});return;}
   if(a==='close'||a==='draw'||a==='draw-match'){
     const matchId=a==='draw-match'?button.dataset.id:undefined;
